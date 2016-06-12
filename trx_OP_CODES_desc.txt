@@ -1,0 +1,145 @@
+# most common TRX and their PK_SCRIPTs:
+  # 
+  # http://www.quantabytes.com/articles/a-survey-of-bitcoin-transaction-types
+  # 1. Pay to PubKey Hash (P2PKH)
+  #    OP_DUP OP_HASH160 OP_DATA_20 OP_EQUALVERIFY OP_CHECKSIG
+  # 
+  # 2. Pay to PubKey (P2PK)
+  #    OP_DATA_65 OP_CHECKSIG
+  #    The "OP_DATA_65 OP_CHECKSIG" and "OP_DATA_33 OP_CHECKSIG" scripts are the 
+  #    standard way of assigning newly mined Bitcoins and transaction fees to an address 
+  #    (COINBASE trx)
+  # 
+  # 3. Pay to Script Hash (P2SH)
+  #    OP_HASH160 OP_DATA_20 OP_EQUAL
+  #    ... moves the responsibility for supplying the conditions to redeem a 
+  #    trx from the creator of the trx to the payee(s). The OP_DATA_20 opcode is 
+  #    followed by a 20 byte hash of the P2SH redeemScript which can be provided by 
+  #    the payee(s) in a future transaction. The transaction type is described in BIP 16.
+  # 
+  # 4. Pay to PubKey
+  #    OP_DATA_33 OP_CHECKSIG
+  #    see 2.
+  # 
+  # 5. Multi-Signature
+  #    OP_1 OP_DATA_65 OP_DATA_65 OP_DATA_65 OP_3 OP_CHECK_MULTISIG
+  #    Although P2SH transactions are now generally used for multi-signature transactions 
+  #    by specifying the multi-signature script in the P2SH redeemScript, they can also be 
+  #    specified directly in the scriptPubKey. 
+  # 
+  # 6. Multi-Signature
+  #    OP_1 OP_DATA_33 OP_DATA_33 OP_2 OP_CHECK_MULTISIG
+  #    see also 5.
+  # 
+  # 7. Multi-Signature
+  #    OP_1 OP_DATA_65 OP_DATA_33 OP_2 OP_CHECK_MULTISIG
+  #    see also 5.
+  # 
+  # 8. Null Data
+  #    OP_RETURN OP_DATA_40
+  #    The null data scripts begin with the OP_RETURN opcode. They allow the 
+  #    creator of the transaction to include some arbitrary data in the block chain
+  #    in exchange for paying a transaction fee. The output is unspendable.
+  # 
+  # 9. Unknown32
+  #    OP_DATA_32
+  #    The „OP_DATA_32“ and „OP_DATA_36" transaction types are unusual. 
+  #    They comprise a single data opcode followed by data. They are non-standard
+  #     transaction types. Outputs are unspendable.
+  # 
+  # 10. Unknown36
+  #     OP_DATA_36
+  #     see 9.
+  # 
+
+================================================================
+
+# state machine:
+CURRENT_STATUS: NEXT_CHAR —> NEW_STATUS
+S0_INIT:OP_1-->S13_OP_1
+	OP_DUP-->S1_OP_DUP
+	OP_HASH160-->S8_OP_HASH160
+	OP_RETURN-->S24_OP_RETURN
+	OP_DATA32-->S26_UNKNOWN
+	OP_DATA33-->S11_OP_DATA33
+	OP_DATA36-->S26_UNKNOWN
+	OP_DATA65-->6_OP_DATA65
+S1_OP_DUP: OP_HASH160-->S2_OP_HASH160
+S2_OP_HASH160: OP_DATA20-->S3_OP_DATA20
+S3_OP_DATA20: OP_EQUALVERIFY-->S4_OP_EQUALVERIFY
+S4_OP_EQUALVERIFY: OP_CHECKSIG-->S5_P2PKH
+S5_P2PKH
+S6_OP_DATA65: OP_CHECKSIG-->S7_P2PK
+S7_P2PK
+S8_OP_HASH160: OP_DATA20-->S9_OP_DATA20
+S9_OP_DATA20: OP_EQUAL-->S10_P2SH
+S10_P2SH
+S11_OP_DATA33: OP_CHECKSIG-->S12_P2PK
+S12_P2PK
+S13_OP_1: OP_DATA33-->S20_OP_DATA33
+	 OP_DATA65-->S14_OP_DATA65
+S14_OP_DATA65: OP_DATA33-->S15_OP_DATA33 
+	      OP_DATA65-->S17_OP_DATA65
+S15_OP_DATA33: OP_2-->S22_PRE_MULTISIG
+S17_OP_DATA65: OP_DATA65-->S18_OP_DATA65
+S18_OP_DATA65: OP_3-->S22_PRE_MULTISIG
+S20_OP_DATA33: OP_DATA33-->S21_OP_DATA33
+S21_OP_DATA33: OP_2-->S22_PRE_MULTISIG
+S22_PRE_MULTISIG: OP_CHECK_MULTISIG-->S23_MULTISIG
+S23_MULTISIG
+S24_OP_RETURN: OP_DATA40-->S25_NULL_DATA
+S25_NULL_DATA
+S26_UNKNOWN
+
+================================================================
+
+# https://en.bitcoin.it/wiki/Script 
+
+# OPCODE details: 
+#   case $cur_opcode in
+#     00) echo "   $cur_opcode: OP_0, OP_FALSE" ;;
+#     01|02|03|04|05|06|07|08|09|0A|0B|0C|0D|0E|0F|\
+#     11|12|13|14|15|16|17|18|19|1A|1B|1C|1D|1E|1F|\
+#     21|22|23|24|25|26|27|28|29|2A|2B|2C|2D|2E|2F|\
+#     31|32|33|34|35|36|37|38|39|3A|3B|3C|3D|3E|3F|\
+#     41|42|43|44|45|46|47|48|49|4A|4B)
+#       echo "   $cur_opcode: OP_Data$cur_opcode (= decimal $cur_opcode_dec)"
+#       offset=$(( offset + 1 ))
+#       op_data_show
+#       ;;
+#     4C) echo "   $cur_opcode: OP_PUSHDATA1" ;;
+#     4D) echo "   $cur_opcode: OP_PUSHDATA2" ;;
+#     4E) echo "   $cur_opcode: OP_PUSHDATA4" ;;
+#     51) echo "   $cur_opcode: OP_1, OP_TRUE" ;;
+#     52|53|54|55|56|57|58|59|5A|5B|5C|5D|5E|5F|60)
+#       echo "   $cur_opcode: OP_Data$cur_opcode (= decimal $cur_opcode_dec)"
+#       offset=$(( offset + 1 ))
+#       op_data_show
+#       ;;
+#     61) echo "   $cur_opcode: OP_NOP"
+#     63) echo "   $cur_opcode: OP_IF"
+#     64) echo "   $cur_opcode: OP_NOTIF"
+#     67) echo "   $cur_opcode: OP_ELSE"
+#     68) echo "   $cur_opcode: OP_ENDIF"
+#     69) echo "   $cur_opcode: OP_VERIFY"
+#     6A) echo "   $cur_opcode: OP_RETURN"
+#     6E) echo "   $cur_opcode: OP_2DUP"
+#     6F) echo "   $cur_opcode: OP_3DUP"
+#     76) echo "   $cur_opcode: OP_DUP"
+#     87) echo "   $cur_opcode: OP_EQUAL"
+#     88) echo "   $cur_opcode: OP_EQUALVERIFY"
+#     8F) echo "   $cur_opcode: OP_NEGATE"
+#     A6) echo "   $cur_opcode: OP_RIPEMD160"
+#     A7) echo "   $cur_opcode: OP_SHA1"
+#     A8) echo "   $cur_opcode: OP_SHA256"
+#     A9) echo "   $cur_opcode: OP_HASH160"
+#     AA) echo "   $cur_opcode: OP_HASH256"
+#     AC) echo "   $cur_opcode: OP_CHECKSIG"
+#     AD) echo "   $cur_opcode: OP_CHECKSIGVERIFY"
+#     AE) echo "   $cur_opcode: OP_CHECKMULTISIG"
+#     AF) echo "   $cur_opcode: OP_CHECKMULTISIGVERIFY"
+#     B1) echo "   $cur_opcode: OP_CHECKLOCKTIMEVERIFY"
+#     B2) echo "   $cur_opcode: OP_CHECKSEQUENCEVERIFY"
+#     *)  echo "   $cur_opcode: unknown opcode "#   esac 
+
+
