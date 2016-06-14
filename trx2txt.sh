@@ -38,6 +38,7 @@ RAW_TRX_DEFAULT=010000000253603b3fdb9d5e10de2172305ff68f4b5227310ba6bd81d4e1bf60
 # Kommandozeilenparameter #
 ###########################
 
+RAW_TRX=$1
 echo "#################################################################"
 echo "### trx2txt.sh: script to de-serialize/decode a Bitcoin trx   ###"
 echo "#################################################################"
@@ -91,8 +92,6 @@ case "$1" in
     echo ""
     exit 0
     ;;
-  *)
-    RAW_TRX=$RAW_TRX_DEFAULT
 esac
 
 if [ $# -lt 1 ] ; then
@@ -168,13 +167,21 @@ else
   echo "the tool can be used, but the option '-vv' will not work."
 fi
 
-echo "#####################################"
-echo "### so let's go, raw trx is this: ###"
-echo "#####################################"
+echo "e.) sed ?"
+which sed > /dev/null
+if [ $? -eq 0 ]; then
+  echo "    yes" 
+else
+  echo "sed not found, please install dc."
+  echo "the tool can be used, but the option '-vv' will not work."
+fi
 
+echo "###################"
+echo "### so let's go ###"
+echo "###################"
 RAW_TRX=$( echo $RAW_TRX | tr [:lower:] [:upper:] )
-if [ "$VERBOSE" -eq 1 ] ; then
-  echo "RAW_TRX:"
+if [ $VERBOSE -eq 1 ] ; then
+  echo "### raw trx is this:"
   echo $RAW_TRX
 fi
 
