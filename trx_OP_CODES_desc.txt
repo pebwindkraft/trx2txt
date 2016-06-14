@@ -142,4 +142,18 @@ S26_UNKNOWN
 #     B2) echo "   $cur_opcode: OP_CHECKSEQUENCEVERIFY"
 #     *)  echo "   $cur_opcode: unknown opcode "#   esac 
 
+=================================
+
+from: https://bitcointalk.org/index.php?topic=1383883.0
+Unless the bottom 5 bits are 0x02 (SIGHASH_NONE) or 0x03 (SIGHASH_SINGLE), all the outputs are included.  If the bit for 0x20 is set, then all inputs are blanked except the current input (SIGHASH_ANYONE_CAN_PAY).
+
+SIGHASH_ALL = 1,
+SIGHASH_NONE = 2,
+SIGHASH_SINGLE = 3,
+SIGHASH_ANYONECANPAY = 0x80,
+
+
+
+
+
 

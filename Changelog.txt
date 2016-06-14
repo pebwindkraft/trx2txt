@@ -14,6 +14,14 @@ date    by    file                   comment
                                      that would display "wrong" default output
 16jun11 svn   trx2txt.sh             do a base58check_enc only, if length = 20 bytes
 16jun12 svn   trx_in_sig_script.sh   converted AWK tool to shell script, added address decoding
-
+16jun13 svn   trx_in_sig_script.sh   fixed S6_Length procedure, to verify next OPCode
+16jun13 svn   trx_in_sig_script.sh   added sanity checks, and adopted naming to bitcoin core,
+                                     as in interpreter.cpp or h files
+16jun13 svn   trx_in_sig_state_machine.graphml - updated status names accordingly
+16jun13 svn   trx_in_sig_script.sh   added sanity checks, and adopted naming to bitcoin core,
+                                     as in interpreter.cpp or h files
+16jun14 svn   trx_in_sig_script.sh   check if "sed" is available
+                                     changed SIG R & SIG S to be 0x21 or 0x21
+16jun14 svn   trx_testcases.sh       added log file capability
 
 
