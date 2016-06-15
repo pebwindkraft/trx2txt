@@ -31,8 +31,15 @@ trx2txt.sh
 Without parameters, the details of a sample transaction are shown, similar to:
 https://blockchain.info/de/rawtx/cc8a279b0736e6a2cc20b324acc5aa688b3af7b63bbb002f46f6573c1ad84408
 
-Alternatively, you can pass the Hex code of a raw trx, for example:
+Parameter -r
+you can pass the Hex code of a raw trx as option, for example:
 https://blockchain.info/de/rawtx/cc8a279b0736e6a2cc20b324acc5aa688b3af7b63bbb002f46f6573c1ad84408?format=hex
+
+Parameter -t
+you can pass the hash value of a trx as option, e.g.: 
+   -t cc8a279b0736e6a2cc20b324acc5aa688b3af7b63bbb002f46f6573c1ad84408
+The script will check for network connectivity, 
+and will then try to download the raw trx data from the given trx number.
 
 Parameter -v
 with parameter „-v“ a more detailed view is provided, along the guidelines of the bitcoin wiki.
@@ -116,4 +123,5 @@ trx_out_pk_state_machine.png     - the exported png for PUBKEY script
 trx_state_matrix.ods             - table with three sheets, showing the state machine’s logic
 
 Documentation files are not included in the hashing with ./trx_testcases.sh. 
+
 
