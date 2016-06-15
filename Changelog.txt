@@ -23,5 +23,7 @@ date    by    file                   comment
 16jun14 svn   trx_in_sig_script.sh   check if "sed" is available
                                      changed SIG R & SIG S to be 0x21 or 0x21
 16jun14 svn   trx_testcases.sh       added log file capability
-
+16jun15 svn   trx2txt.sh             parameter handling changed completly ("-r", "-t")
+16jun15 svn   trx2txt.sh             add feature to load data from www.blockchain.info
+16jun14 svn   trx_testcases.sh       added checksum results into output
 

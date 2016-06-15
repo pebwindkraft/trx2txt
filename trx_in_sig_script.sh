@@ -87,7 +87,7 @@ fi
 #         Technical_background_of_version_1_Bitcoin_addresses#How_to_create_Bitcoin_Address
 # http://gobittest.appspot.com/Address
 get_address() {
-  # if [ $QUIET -eq 0 ] ; then echo "get_address"; fi
+  # if [ $QUIET -eq 0 ] ; then echo "get_address"; fi
   result=$( echo $ret_string | sed 's/[[:xdigit:]]\{2\}/\\x&/g' )
   result=$( printf "$result" | openssl dgst -sha256 | cut -d " " -f 2 )
   result=$( echo $result | sed 's/[[:xdigit:]]\{2\}/\\x&/g' )
@@ -98,7 +98,7 @@ get_address() {
 ### procedure to show data separated by colon or newline ###
 ############################################################
 op_data_show() {
-  # if [ $QUIET -eq 0 ] ; then echo "op_data_show"; fi
+  # if [ $QUIET -eq 0 ] ; then echo "op_data_show"; fi
   ret_string=''
   n=1
   output=
@@ -123,7 +123,7 @@ op_data_show() {
 ### GET NEXT CODE ###
 #####################
 get_next_opcode() {
-  # if [ $QUIET -eq 0 ] ; then echo "get_next_opcode"; fi
+  # if [ $QUIET -eq 0 ] ; then echo "get_next_opcode"; fi
   cur_opcode=${opcode_ar[offset]}
   cur_hexcode="0x"$cur_opcode
   cur_opcode_dec=$( echo "ibase=16;$cur_opcode" | bc )
@@ -135,7 +135,7 @@ get_next_opcode() {
 ### STATUS 1 (S1_SIG_LEN_0x47)    ###
 #####################################
 S1_SIG_LEN_0x47() {
-  # if [ $QUIET -eq 0 ] ; then echo "S1_SIG_LEN_0x47"; fi
+  # if [ $QUIET -eq 0 ] ; then echo "S1_SIG_LEN_0x47"; fi
   get_next_opcode
   case $cur_opcode in
     30) echo "   $cur_opcode: OP_LENGTH_0x30"
@@ -149,7 +149,7 @@ S1_SIG_LEN_0x47() {
 ### STATUS 2 (S2_SIG_LEN_0x48)    ###
 #####################################
 S2_SIG_LEN_0x48() {
-  # if [ $QUIET -eq 0 ] ; then echo "S1_SIG_LEN_0x48"; fi
+  # if [ $QUIET -eq 0 ] ; then echo "S1_SIG_LEN_0x48"; fi
   get_next_opcode
   case $cur_opcode in
     30) echo "   $cur_opcode: OP_LENGTH_0x30"
@@ -409,7 +409,7 @@ S18_SIG() {
 ### STATUS 19 (S19_PK)            ###
 #####################################
 S19_PK() {
-    # if [ $QUIET -eq 0 ] ; then echo "S19_PK"; fi
+    # if [ $QUIET -eq 0 ] ; then echo "S19_PK"; fi
     cur_opcode_dec=33
     op_data_show
     echo "* This is Public ECDSA Key, corresponding bitcoin address is:"
@@ -419,7 +419,7 @@ S19_PK() {
 ### STATUS 20 ()                  ###
 #####################################
 S20_PK() {
-    # if [ $QUIET -eq 0 ] ; then echo "S20_PK"; fi
+    # if [ $QUIET -eq 0 ] ; then echo "S20_PK"; fi
     cur_opcode_dec=65
     op_data_show
     echo "* This is Public ECDSA Key, corresponding bitcoin address is:"
@@ -465,7 +465,7 @@ fi
 #####################################
   while [ $offset -lt $opcode_array_elements ]  
    do
-    # if [ $QUIET -eq 0 ] ; then echo "S0_INIT"; fi
+    # if [ $QUIET -eq 0 ] ; then echo "S0_INIT"; fi
     get_next_opcode
     
     case $cur_opcode in
@@ -485,7 +485,7 @@ fi
           ;;
     esac
 
-    if [ $offset -gt 250 ] ; then
+    if [ $offset -gt 300 ] ; then
       echo "emergency exit, output scripts should not reach this size?"
       exit 1
     fi
