@@ -18,7 +18,7 @@ Most easily you’d call this:
 openssl dgst -sha256 tmptest
 
 which provides a hash of all hashes and returns (in current v0.1 implementation): 
-SHA256(tmptest)= f47a0c0204caff1d92d6312e15ee5e508dc75712966a5d4d8c46744bc8ace922
+SHA256(tmptest)= dcf5016b11677758afad4b2abda44a211e1ced36d28e59381f7f9e994ae81d5a
 
 The code is not written for best performance. There are many calls to shell functions (always a fork during shell execution). Also several external programs are called. 
 On readability: current version of programs are heavily commented, so one can follow/understand  the program’s logic. 

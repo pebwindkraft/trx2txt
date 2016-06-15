@@ -1,7 +1,7 @@
 #!/bin/sh
 # convert a raw trx from blockchain.info into the separate parts, as specified by:
 # 
-# example trx:
+# included example trx:
 # https://blockchain.info/de/rawtx/
 #  cc8a279b0736e6a2cc20b324acc5aa688b3af7b63bbb002f46f6573c1ad84408?format=hex
 #
@@ -23,167 +23,252 @@
 # RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, 
 # NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE 
 # USE OR PERFORMANCE OF THIS SOFTWARE. 
+# 
 
 ###########################
 # Some variables ...      #
 ###########################
-VERBOSE=0
-VVERBOSE=0
 LOOPCOUNTER=0
+TRX=''
+RAW_TRX=''
 RAW_TRX_LINK=https://blockchain.info/de/rawtx/cc8a279b0736e6a2cc20b324acc5aa688b3af7b63bbb002f46f6573c1ad84408
 RAW_TRX_LINK2HEX="?format=hex"
 RAW_TRX_DEFAULT=010000000253603b3fdb9d5e10de2172305ff68f4b5227310ba6bd81d4e1bf60c0de6183bc010000006a4730440220128487f04a591c43d7a6556fff9158999b46d6119c1a4d4cf1f5d0ac1dd57a94022061556761e9e1b1e656c0a70aa7b3e83454cd61662df61ebdc31e43196b5e0c10012102b12126a716ce7bbb84703bcfbf0afa80283c75a7304a48cd311a5027efd906c2ffffffff0e52c4701577287b6dd02f422c2a8033fa0b4614f75fa9f0a5c4ab69634b5ba7000000006b483045022100a428348ff55b2b59bc55ddacb1a00f4ecdabe282707ba5185d39fe9cdf05d7f0022074232dae76965b6311cea2d9e5708a0f137f4ea2b0e36d0818450c67c9ba259d0121025f95e8a33556e9d7311fa748e9434b333a4ecfb590c773480a196deab0dedee1ffffffff0290257300000000001976a914fca68658b537382e27a85522d292e1ad9543fe0488ac98381100000000001976a9146af1d17462c6146a8a61217e8648903acd3335f188ac00000000
+VERBOSE=0
+VVERBOSE=0
 
-###########################
-# Kommandozeilenparameter #
-###########################
+proc_help() {
+  echo "  "
+  echo "usage: trx2txt.sh [-h|--help|-r|--rawtrx|-t|--trx|-v|--verbose|-vv] [[raw]trx]"
+  echo "  "
+  echo "convert a raw trx into separate lines, as specified by:"
+  echo "https://en.bitcoin.it/wiki/Protocol_specification#tx"
+  echo "  "
+  echo " -h|--help     show this help text"
+  echo " -r|--rawtrx   requires hex data from a raw transaction "
+  echo " -t|--trx      requires hash of a trx (64 Bytes) to fetch from blockchain.info"
+  echo " -v|--verbose  display verbose output"
+  echo " -vv           display even more verbose output"
+  echo "  "
+  echo " without parameter, a default transaction will be displayed"
+  echo " "
+}
 
-RAW_TRX=$1
+v_output() {
+  if [ $VERBOSE -eq 1 ] ; then
+    echo $1
+  fi
+}
+
+vv_output() {
+  if [ $VVERBOSE -eq 1 ] ; then
+    echo $1
+  fi
+}
+
+################################
+# command line params handling #
+################################
+
 echo "#################################################################"
 echo "### trx2txt.sh: script to de-serialize/decode a Bitcoin trx   ###"
 echo "#################################################################"
 echo "  "
-case "$1" in
-  -vv)
-     VVERBOSE=1
-     VERBOSE=1
-     if [ $# -eq 2 ] ; then
-       RAW_TRX=$2
-     else
-       echo "no parameter for RAW TRX, using example raw trx, see also here:"
-       echo $RAW_TRX_LINK
-       echo $RAW_TRX_LINK$RAW_TRX_LINK2HEX
-       echo " "
-       echo "alternativly, try --help"
-       RAW_TRX=$RAW_TRX_DEFAULT
-     fi
-     echo "VERBOSE turned on"
-     ;;
-  -v|--verbose)
-     VERBOSE=1
-     if [ $# -eq 2 ] ; then
-       RAW_TRX=$2
-     else
-       echo "no parameter for RAW TRX, using example raw trx, see also here:"
-       echo $RAW_TRX_LINK
-       echo $RAW_TRX_LINK$RAW_TRX_LINK2HEX
-       echo " "
-       echo "alternativly, try --help"
-       RAW_TRX=$RAW_TRX_DEFAULT
-     fi
-     echo "VERBOSE turned on"
-     ;;
-  -?|-h|--help)
-    echo "usage: trx2txt.sh [-?|-h|--help|-v|--verbose|-vv] raw_trx"
-    echo "  "
-    echo "convert a raw trx from blockchain.info into the separate parts, as specified by:"
-    echo "https://en.bitcoin.it/wiki/Protocol_specification#tx"
-    echo "e.g.:"
-    echo "https://blockchain.info/de/rawtx/\c"
-    echo "cc8a279b0736e6a2cc20b324acc5aa688b3af7b63bbb002f46f6573c1ad84408?format=hex"
-    echo "  "
-    echo "   version (uint32_t):         01000000"
-    echo "   tx_in count (var_int):      02"
-    echo "   previous_output (outpoint): 53603b3fdb9d5e..."
-    echo "                               ..."
-    echo "   pk_script length (var_int): 19"
-    echo "   pk_script (uchar[]):        76a914fca68658b537382e27a85522d292e1ad9543fe0488ac"
-    echo "   lock_time (uint32_t):       00000000"
-    echo ""
-    exit 0
-    ;;
-esac
 
-if [ $# -lt 1 ] ; then
-  echo "usage: trx2txt.sh [-?|-h|--help|-v|--verbose|-vv] raw_trx"
-  echo "  "
-  echo "no parameters, using example raw trx ..."
+if [ $# -eq 0 ] ; then
+  echo "no parameter(s) given, using defaults"
+  echo " "
   echo "alternativly, try --help"
-  echo "  "
+  echo " "
   RAW_TRX=$RAW_TRX_DEFAULT
+else
+  while [ $# -ge 1 ] 
+   do
+    case "$1" in
+      -h | --help)
+         proc_help
+         exit 0
+         ;;
+      -r | --rawtrx)
+         if [ "$TRX" ] ; then
+           echo "*** you cannot use -t and -r at the same time!"
+           echo " "
+           exit 0
+         fi
+         if [ "$2" == ""  ] ; then
+           echo "*** you must provide a string to the -r parameter!"
+           exit 0
+         else
+           RAW_TRX=$2
+           shift 
+         fi
+         shift 
+         ;;
+      -t | --trx)
+         if [ "$RAW_TRX" ] ; then
+           echo "*** you cannot use -r and -t at the same time!"
+           echo " "
+           exit 0
+         fi
+         if [ "$2" == ""  ] ; then
+           echo "*** you must provide a string to the -t parameter!"
+           exit 0
+         else
+           TRX=$2
+           shift 
+         fi
+         if [ ${#TRX} -ne 64 ] ; then
+           echo "*** Bitcoin protocol requires a proper formatted trx."
+           echo "please provide a 64 bytes hex string with '-t'."
+           exit 0
+         fi
+         shift 
+         ;;
+      -v | --verbose)
+         VERBOSE=1
+         echo "VERBOSE output turned on"
+         if [ "$2" == ""  ] ; then
+           RAW_TRX=$RAW_TRX_DEFAULT
+         fi
+         shift
+         ;;
+      -vv)
+         VERBOSE=1
+         VVERBOSE=1
+         echo "VVERBOSE and VERBOSE output turned on"
+         if [ "$2" == ""  ] ; then
+           RAW_TRX=$RAW_TRX_DEFAULT
+         fi
+         shift
+         ;;
+      *)  # No more options
+         echo "unknown parameter $1 "
+         proc_help
+         exit 1
+         # break
+         ;;
+    esac
+  done
 fi
 
 # verify operating system, cause 
 # Linux wants to have "--posix" for their gawk program ...
+http_get_cmd="echo " 
 OS=$(uname)
 if [ $OS == "OpenBSD" ] ; then
-  if [ "$VVERBOSE" -eq 1 ] ; then
-    # echo "### cool, I am running on my preferred OS :-)"
-    awk_cmd=awk 
-  fi
+  awk_cmd=awk 
+  http_get_cmd="ftp -M -V -o - "
 fi
 if [ $OS == "Darwin" ] ; then
-  if [ "$VVERBOSE" -eq 1 ] ; then
-    # echo "### cool, I am running on an OSX box"
-    awk_cmd=$(which awk) 
-  fi
+  awk_cmd=$(which awk) 
+  http_get_cmd="curl -sS -L "
 fi
 if [ $OS == "Linux" ] ; then
-  if [ "$VVERBOSE" -eq 1 ] ; then
-    # echo "### cool, I am running on Linux"
-    awk_cmd="awk --posix" 
-  fi
+  awk_cmd="awk --posix" 
+  http_get_cmd="curl "
 fi
-echo " "
 
-echo "#############################################"
-echo "### Check if necessay tools are there ... ###"
-echo "#############################################"
-echo "a.) awk ?"
+v_output "#########################################"
+v_output "### Check if necessay tools are there ###"
+v_output "#########################################"
+vv_output "a.) awk ?"
 which awk > /dev/null
 if [ $? -eq 0 ]; then
-  echo "    yes" 
+  vv_output "    yes" 
 else
-  echo "awk not found, please install awk."
+  echo "*** awk not found, please install awk."
   echo "exiting gracefully ..." 
   exit 0
 fi
 
-echo "b.) openssl ?" 
+vv_output "b.) openssl ?" 
 which openssl > /dev/null
 if [ $? -eq 0 ]; then
-  echo "    yes"
+  vv_output "    yes"
 else
-  echo "openssl not found, please install bc."
+  echo "openssl not found, please install openssl."
   echo "the tool can be used, but the option '-vv' will not work."
 fi
 
-echo "c.) bc ?"
+vv_output "c.) bc ?"
 which bc > /dev/null
 if [ $? -eq 0 ]; then
-  echo "    yes" 
+  vv_output "    yes" 
 else
-  echo "bc not found, please install bc."
+  echo "*** bc not found, please install bc."
   echo "exiting gracefully ..." 
   exit 0
 fi
 
-echo "d.) dc ?"
+vv_output "d.) dc ?"
 which dc > /dev/null
 if [ $? -eq 0 ]; then
-  echo "    yes" 
+  vv_output "    yes" 
 else
   echo "dc not found, please install dc."
   echo "the tool can be used, but the option '-vv' will not work."
 fi
 
-echo "e.) sed ?"
+vv_output "e.) sed ?"
 which sed > /dev/null
 if [ $? -eq 0 ]; then
-  echo "    yes" 
+  vv_output "    yes" 
 else
-  echo "sed not found, please install dc."
+  echo "sed not found, please install sed."
   echo "the tool can be used, but the option '-vv' will not work."
 fi
 
+###############################################
+### Check if network is required and active ###
+###############################################
+# 
+# if param -t was given, then a trx string should be in variable "TRX":
+#   ./trx2txt -t cc8a279b0736e6a2cc20b324acc5aa688b3af7b63bbb002f46f6573c1ad84408
+# 
+# no we need to:
+# 1.) check if network interface is active ...
+# 2.) go to the network, like this:
+#     https://blockchain.info/de/rawtx/cc8a279b07...3c1ad84408?format=hex
+# 3.) use OS specific calls:
+#     OpenBSD: ftp -M -V -o - https://blockchain.info/de/rawtx/...
+# 4.) pass everything into the variable "RAW_TRX"
+# 
+if [ "$TRX" ] ; then
+  echo "###############################################"
+  echo "### Check if network is required and active ###"
+  echo "###############################################"
+  v_output "working with this TRX: $TRX"
+  nw_if=$( netstat -rn | awk '/^default/ { print $NF }' | head -n1 )
+  ifconfig $nw_if | grep -q " active"
+  if [ $? -eq 0 ] ; then
+    v_output "network interface is active, good"
+    v_output "trying to fetch data from blockchain.info"
+    RAW_TRX=$( $http_get_cmd https://blockchain.info/de/rawtx/$TRX$RAW_TRX_LINK2HEX )
+    if [ $? -ne 0 ] ; then
+      echo "*** error - fetching RAW_TRX data:"
+      echo "    $http_get_cmd https://blockchain.info/de/rawtx/$TRX$RAW_TRX_LINK2HEX"
+      echo "    downoad manually, and call 'trx2txt -r ...'"
+      exit 1
+    fi
+    if [ ${#RAW_TRX} -eq 0 ] ; then
+      echo "*** The raw trx has a length of 0. Something failed."
+      echo "    downoad manually, and call 'trx2txt -r ...'"
+      exit 0
+    fi
+  else
+    echo "*** error - no network connection"
+    echo "    check 'netstat -rn' default gateway, and 'ifconfig'"
+    exit 1
+  fi
+fi
+
+RAW_TRX=$( echo $RAW_TRX | tr [:lower:] [:upper:] )
+v_output "raw trx is this:"
+v_output $RAW_TRX
 echo "###################"
 echo "### so let's go ###"
 echo "###################"
-RAW_TRX=$( echo $RAW_TRX | tr [:lower:] [:upper:] )
-if [ $VERBOSE -eq 1 ] ; then
-  echo "### raw trx is this:"
-  echo $RAW_TRX
-fi
+
 
 ##############################################################################
 ### VERSION
@@ -197,9 +282,7 @@ if [ "$VERBOSE" -eq 1 ] ; then
 fi
 length=8
 offset=1
-# echo $RAW_TRX | awk '{ print substr($0, 0, 8) }'
 echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }'
-# echo ${RAW_TRX:$offset:$length} 
 offset=$(($offset + $length))
  
 ##############################################################################
