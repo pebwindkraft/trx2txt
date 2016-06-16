@@ -46,7 +46,7 @@ proc_help() {
   echo "  "
   echo " -h|--help     show this help text"
   echo " -r|--rawtrx   requires hex data from a raw transaction "
-  echo " -t|--trx      requires hash of a trx (64 Bytes) to fetch from blockchain.info"
+  echo " -t|--trx      requires a TRANSACTION_ID, and fetch data from blockchain.info"
   echo " -v|--verbose  display verbose output"
   echo " -vv           display even more verbose output"
   echo "  "
@@ -111,15 +111,15 @@ else
            exit 0
          fi
          if [ "$2" == ""  ] ; then
-           echo "*** you must provide a string to the -t parameter!"
+           echo "*** you must provide a Bitcoin TRANSACTION_ID to the -t parameter!"
            exit 0
          else
            TRX=$2
            shift 
          fi
          if [ ${#TRX} -ne 64 ] ; then
-           echo "*** Bitcoin protocol requires a proper formatted trx."
-           echo "please provide a 64 bytes hex string with '-t'."
+           echo "*** expecting a proper formatted Bitcoin TRANSACTION_ID."
+           echo "    please provide a 64 bytes string (aka 32 hex chars) with '-t'."
            exit 0
          fi
          shift 
@@ -142,7 +142,7 @@ else
          shift
          ;;
       *)  # No more options
-         echo "unknown parameter $1 "
+         echo "*** unknown parameter $1 "
          proc_help
          exit 1
          # break
@@ -165,7 +165,7 @@ if [ $OS == "Darwin" ] ; then
 fi
 if [ $OS == "Linux" ] ; then
   awk_cmd="awk --posix" 
-  http_get_cmd="curl -sS -L"
+  http_get_cmd="curl -sS -L "
 fi
 
 v_output "#########################################"
@@ -222,7 +222,7 @@ fi
 ### Check if network is required and active ###
 ###############################################
 # 
-# if param -t was given, then a trx string should be in variable "TRX":
+# if param -t was given, then a Bitcoin TRANSACTION_ID should be in variable "TRX":
 #   ./trx2txt -t cc8a279b0736e6a2cc20b324acc5aa688b3af7b63bbb002f46f6573c1ad84408
 # 
 # no we need to:
@@ -240,7 +240,7 @@ if [ "$TRX" ] ; then
   v_output "working with this TRX: $TRX"
   if [ $OS == "Linux" ] ; then
     nw_if=$( netstat -rn | awk '/^0.0.0.0/ { print $NF }' | head -n1 )
-    ifstatus enp0s3 | grep -q "up"
+    ifstatus $nw_if | grep -q "up"
   else
     nw_if=$( netstat -rn | awk '/^default/ { print $NF }' | head -n1 )
     ifconfig $nw_if | grep -q " active"

@@ -1,5 +1,7 @@
+GITHUB messes with the text and newlines, please view in "raw" mode...
+
 ###############################
-### 1. TRX2TXT description: ###
+### 1. TRX2TXT description: ###
 ###############################
 A suite of shell scripts to display a Bitcoin transaction in plain text, similiar to the Bitcoin core client or "www.blockchain.info" JSON output. 
 
@@ -16,7 +18,7 @@ Readability: current version of programs are heavily commented, to be able to fo
 
 
 #######################
-### file trx2txt.sh ###
+### file trx2txt.sh ###
 #######################
 The main script. You'll want to start here :-)
 The program checks the parameters, checks the version of the shell (for cases where POSIX compliance can not be achieved, in particular with arrays), checks availability for all necessary sub-programs (openssl, awk, bc, ...) to decode a transaction, and then begins to break down the transactions.
@@ -46,13 +48,13 @@ The script will check for network connectivity, and will then try to download th
 
 
 ###########################
-### 2. Supporting files ###
+### 2. Supporting files ###
 ###########################
 The supporting scripts are used by the main program (trx2txt.sh), but can also be used independantly, when provided with the correct parameters. 
 
 
 #################################
-### file trx_in_sig_script.sh ###
+### file trx_in_sig_script.sh ###
 #################################
 This shell script tries to decode the TRX-IN sig script via it's internal simple state diagram. The way the OPCodes are processed follows the picture "trx_in_sig_state_machine.png". At anytime the script can be used "stand alone". Just need to provide a sig script as parameter: 
 
@@ -82,7 +84,7 @@ This shell script tries to decode the TRX-IN sig script via it's internal simple
 
 
 #################################
-### file trx_out_pk_script.sh ###
+### file trx_out_pk_script.sh ###
 #################################
 This shell script tries to decode the TRX-OUT public key script via it's internal simple state diagram. The way the OPCodes are processed follows the picture "trx_out_pk_state_machine.png". At anytime the script can be used "stand alone". Just need to provide a pubkey script as parameter:
 
@@ -100,7 +102,7 @@ The string of the 20 bytes in the middle of this output is the hexadecimal repre
 
 
 ###############################
-### file base58check_enc.sh ###
+### file base58check_enc.sh ###
 ###############################
 This shell script tries to decode the addresses in BITCOIN SCRIPTs. It reads the hex codes, does a base58 conversion, and displays the bitcoin address. At anytime the file can be used "stand alone". Just provide the 20 hex bytes as parameter:
 
@@ -111,7 +113,7 @@ The "-q" parameter is for "quiet" output. Without it, script will display detail
 
 
 #############################
-### file trx_testcases.sh ###
+### file trx_testcases.sh ###
 #############################
 This shell script supports the development process, and verifies the script output(s).
 1.) build sha256 checksums of the involved source code scripts
@@ -119,7 +121,6 @@ This shell script supports the development process, and verifies the script outp
 3.) sent output into a file, and calculate it’s SHA256 hash value
 4.) compare checksums 
 
-When called with parameter "-l", a log file ("trx_testcases.sh.log") is created. 
 Most easily it is used like this:
 
   ./trx_testcases.sh > tmptest
@@ -127,9 +128,18 @@ Most easily it is used like this:
 
 which provides a hash of all hashes. This can be easily compared on all platforms. When hash is equal on all platforms, code is ready to be uploaded to GITHUB (or similiar). 
 
+./trx_testcases.sh -l|--log
+"-l", a log file ("trx_testcases.sh.log") is created. All checks are performed.
+
+./trx_testcases.sh -?|-h|--help
+"-h" displays a help text
+
+./trx_testcases.sh 1|2|3|4|5|6|7|8
+[1-8] runs the specific testcases, to get quickly the sha256 hashes
+
 
 #########################
-### 3. Documentation: ###
+### 3. Documentation: ###
 #########################
 README.md                        - this file :-)
 Changelog.txt                    - view changes over the files 
@@ -143,5 +153,4 @@ trx_OP_CODES_desc.txt            - used references for PK_SCRIPT and their OpCod
 trx_state_matrix.ods             - table with three sheets, showing the state machine’s logic
 
 Documentation files are not included in the hashing with ./trx_testcases.sh. 
-
 
