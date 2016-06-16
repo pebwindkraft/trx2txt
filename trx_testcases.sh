@@ -18,46 +18,17 @@
 # 
 
 typeset -i LOG=0
-case "$1" in
-  -l|--log)
-     LOG=1
-     shift
-     ;;
-  -?|-h|--help)
-     echo "usage: trx_testcases.sh [-?|-h|--help|-l|--log]"
-     echo "  "
-     echo "script does several testcases, mostly with checksums for verification"
-     echo "  "
-     exit 0
-     ;;
-  *)
-     ;;
-esac
+logfile=$0.log
 
 chksum_verify() {
 if [ "$1" == "$2" ] ; then
   echo "ok"
 else
-  echo "********** checksum mismatch **********" 
+  echo "*********************   checksum  mismatch   ********************" 
 fi
 }
 
-logfile=$0.log
-if [ -f "$logfile" ] ; then rm $logfile; fi
-echo $date > $logfile
-
-# verify our operating system, cause checksum commands differ ...
-OS=$(uname) 
-if [ OS="OpenBSD" ] ; then
-  chksum_cmd=sha256
-fi
-if [ OS="Linux" ] ; then
-  chksum_cmd="openssl sha256"
-fi
-if [ OS="Darwin" ] ; then
-  chksum_cmd="openssl sha256"
-fi
-
+testcase1() {
 # first get the checksums of all necessary files
 echo "#################################################################" | tee -a $logfile
 echo "### TESTCASE 1:                                               ###" | tee -a $logfile
@@ -68,7 +39,7 @@ echo "#################################################################" >> $log
 echo "TESTCASE 1a: $chksum_cmd trx2txt.sh" | tee -a $logfile
 result=$( $chksum_cmd trx2txt.sh )
 echo $result | tee -a $logfile
-chksum_verify "$result" "SHA256(trx2txt.sh)= b107683ddbf4db5f92d0124f8694e020401e8240b43d7729dad00b2c23a87814" 
+chksum_verify "$result" "SHA256(trx2txt.sh)= 604f073c06ab09458e21ff61b554937c1ea570f644e3065cf39dc5380cebd4ff" 
 
 echo "TESTCASE 1b: $chksum_cmd trx_in_sig_script.sh" | tee -a $logfile
 result=$( $chksum_cmd trx_in_sig_script.sh )
@@ -86,7 +57,9 @@ echo $result | tee -a $logfile
 chksum_verify "$result" "SHA256(base58check_enc.sh)= 73f8b9ac560cce8edbfc965c58fefa862c4e7925314e20f0d0513f5a952915d2" 
 
 echo " " | tee -a $logfile
+}
 
+testcase2() {
 # do a testcase with the included example transaction
 echo "#################################################################" | tee -a $logfile
 echo "### TESTCASE 2:                                               ###" | tee -a $logfile
@@ -107,7 +80,7 @@ else
   result=$( $chksum_cmd tmpfile )
   echo $result
 fi
-chksum_verify "$result" "SHA256(tmpfile)= bcf2682db64ec2e7d866c65f0313b9601b80513b1af897da647ba137ff433225" 
+chksum_verify "$result" "SHA256(tmpfile)= b13c815429e3050d5180bafb727fc37459d4d8a161ee25edd38853a95e23af4c" 
 
 echo "TESTCASE 2b: " | tee -a $logfile
 if [ $LOG -eq 1 ] ; then
@@ -133,7 +106,7 @@ else
   result=$( $chksum_cmd tmpfile )
   echo $result
 fi
-chksum_verify "$result" "SHA256(tmpfile)= c1f1367353e96b64565c0e0e6e91cdb321126310bb59404894debb72924e1474" 
+chksum_verify "$result" "SHA256(tmpfile)= 67f89326ba5c1f12b69e12a9723cf176056655fcdb3aca720b11e941b7db5b25" 
 
 echo "TESTCASE 2d: " | tee -a $logfile
 if [ $LOG -eq 1 ] ; then
@@ -159,7 +132,7 @@ else
   result=$( $chksum_cmd tmpfile )
   echo $result
 fi
-chksum_verify "$result" "SHA256(tmpfile)= f8eae1b8e27968a08e358b3b8179b2a903cb0aaf91891d149c9ed1952f011612" 
+chksum_verify "$result" "SHA256(tmpfile)= bc63cf89cb676c08f7025e09c81b81ac7c379f37b2f4ac5a7b02bb114a760276" 
 
 echo "TESTCASE 2f: " | tee -a $logfile
 if [ $LOG -eq 1 ] ; then
@@ -172,7 +145,7 @@ else
   result=$( $chksum_cmd tmpfile )
   echo $result
 fi
-chksum_verify "$result" "SHA256(tmpfile)= 094b4a4113702d07446f0afd242576842a52a750b2567b1f90651b2248a5ae45" 
+chksum_verify "$result" "SHA256(tmpfile)= 3820f5b533a152e796007b884d7cc06f3fa68f8904f00578e80abae45039b1e1" 
 
 echo "TESTCASE 2g: " | tee -a $logfile
 if [ $LOG -eq 1 ] ; then
@@ -185,7 +158,7 @@ else
   result=$( $chksum_cmd tmpfile )
   echo $result
 fi
-chksum_verify "$result" "SHA256(tmpfile)= 0ef33a6aeb49021555645db2b07710223f3d9b5a4d6be24d50e231af560c3e66" 
+chksum_verify "$result" "SHA256(tmpfile)= f385045dd410711e4796b776b57653b3808c762660b5d13c90bab1c1c3d581c8" 
 
 echo "TESTCASE 2h: " | tee -a $logfile
 if [ $LOG -eq 1 ] ; then
@@ -223,8 +196,9 @@ else
 fi
 chksum_verify "$result" "SHA256(tmpfile)= ca75b7e09fea3d3b6796fbcc7d3dce2c2dc61a1e9d103146be36bc0fadcd3ac5" 
 echo " " | tee -a $logfile
+}
 
-
+testcase3() {
 # this is a fairly simple trx, 1 input, 1 output
 echo "#################################################################" | tee -a $logfile
 echo "### TESTCASE 3:                                               ###" | tee -a $logfile
@@ -271,8 +245,9 @@ else
 fi
 chksum_verify "$result" "SHA256(tmpfile)= 0a488ff38f528150856983d87c8f964e6a2dd8d4d0ed48665f055d8a803dca14"
 echo " " | tee -a $logfile
+}
 
-
+testcase4() {
 # this is a fairly simple trx, 1 input, 2 outputs
 echo "#################################################################" | tee -a $logfile
 echo "### TESTCASE 4:                                               ###" | tee -a $logfile
@@ -317,8 +292,9 @@ else
 fi
 chksum_verify "$result" "SHA256(tmpfile)= 3769774ddaa4ac5c0b16d3b39c2e49f671ea93888bdc60d373455c14f8728d60"
 echo " " | tee -a $logfile
+}
 
-
+testcase5() {
 # this is a fairly simple trx, 3 inputs, 1 output 
 echo "#################################################################" | tee -a $logfile
 echo "### TESTCASE 5:                                               ###" | tee -a $logfile
@@ -364,8 +340,9 @@ else
 fi
 chksum_verify "$result" "SHA256(tmpfile)= ef05b4a6971b9aa17c448643d990f8b025e5099742d4e9bb7d23757f8531a2c3"
 echo " " | tee -a $logfile
+}
 
-
+testcase6() {
 # this trx has 1 input, and 4 outputs.
 echo "#################################################################" | tee -a $logfile
 echo "### TESTCASE 6:                                               ###" | tee -a $logfile
@@ -411,8 +388,9 @@ else
 fi
 chksum_verify "$result" "SHA256(tmpfile)= d23bca9153c0e642a136b8325ef8f2bc9ce233e150106ca72450fb0effd7a4a6"
 echo " " | tee -a $logfile
+}
 
-
+testcase7() {
 # this trx has 1 input, 2 outputs (one is P2SH script)
 echo "#################################################################" | tee -a $logfile
 echo "### TESTCASE 7:                                               ###" | tee -a $logfile
@@ -479,8 +457,9 @@ else
 fi
 chksum_verify "$result" "SHA256(tmpfile)= cd0906e6a469c10308ab0b4c40fbe2afb7705dad4ac5ab57f3a8a3ee5006c173"
 echo " " | tee -a $logfile
+}
 
-
+testcase8() {
 # this trx has 1 input, 4 outputs (one is P2SH script)
 echo "#################################################################" | tee -a $logfile
 echo "### TESTCASE 8:                                               ###" | tee -a $logfile
@@ -529,10 +508,9 @@ else
 fi
 chksum_verify "$result" "SHA256(tmpfile)= d1e32dfcc4e3a9f4570d06527ab9f9e171a9c0058aa402ae463d108b02248986"
 echo " " | tee -a $logfile
+}
 
-
-exit 0
-
+testcase9() {
 echo "TESTCASE 9a: " | tee -a $logfile
 if [ $LOG -eq 1 ] ; then
   ./trx2txt.sh >> $logfile
@@ -563,10 +541,61 @@ else
   $chksum_cmd tmpfile
 fi
 echo " " | tee -a $logfile
+}
 
 
-exit 0
+all_testcases() {
+  testcase1 
+  testcase2 
+  testcase3 
+  testcase4 
+  testcase5 
+  testcase6 
+  testcase7 
+  testcase8 
+}
 
+#####################
+### here we start ###
+#####################
+logfile=$0.log
+if [ -f "$logfile" ] ; then rm $logfile; fi
+echo $date > $logfile
 
+###################################################################
+# verify our operating system, cause checksum commands differ ... #
+###################################################################
+OS=$(uname) 
+if [ OS="OpenBSD" ] ; then
+  chksum_cmd=sha256
+fi
+if [ OS="Linux" ] ; then
+  chksum_cmd="openssl sha256"
+fi
+if [ OS="Darwin" ] ; then
+  chksum_cmd="openssl sha256"
+fi
 
+case "$1" in
+  -l|--log)
+     LOG=1
+     shift
+     all_testcases
+     ;;
+  -?|-h|--help)
+     echo "usage: trx_testcases.sh [1-8|-?|-h|--help|-l|--log]"
+     echo "  "
+     echo "script does several testcases, mostly with checksums for verification"
+     echo "script accepts max one parameter !" 
+     echo "  "
+     exit 0
+     ;;
+  1|2|3|4|5|6|7|8)
+     testcase$1 
+     shift
+     ;;
+  *)
+     all_testcases
+     ;;
+esac
 

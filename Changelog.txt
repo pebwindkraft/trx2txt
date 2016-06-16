@@ -26,5 +26,6 @@ date    by    file                   comment
 16jun15 svn   trx2txt.sh             parameter handling changed completly ("-r", "-t")
 16jun15 svn   trx2txt.sh             add feature to load data from www.blockchain.info
 16jun15 svn   trx_testcases.sh       added checksum results into output
-16jun16 svn   trx2txt.sh             fixed network verification for LINUX
+16jun16 svn   trx_testcases.sh       added better parameter handling ([1-8])
+16jun15 svn   trx2txt.sh             fixed naming conventions ("TRANSACTION_ID")
 
