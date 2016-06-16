@@ -1,3 +1,5 @@
+GITHUB messes with the text and newlines, please view in "raw" mode...
+
 ###############################
 ### 1. TRX2TXT description: ###
 ###############################
