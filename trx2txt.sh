@@ -165,7 +165,7 @@ if [ $OS == "Darwin" ] ; then
 fi
 if [ $OS == "Linux" ] ; then
   awk_cmd="awk --posix" 
-  http_get_cmd="curl "
+  http_get_cmd="curl -sS -L"
 fi
 
 v_output "#########################################"
@@ -238,8 +238,13 @@ if [ "$TRX" ] ; then
   echo "### Check if network is required and active ###"
   echo "###############################################"
   v_output "working with this TRX: $TRX"
-  nw_if=$( netstat -rn | awk '/^default/ { print $NF }' | head -n1 )
-  ifconfig $nw_if | grep -q " active"
+  if [ $OS == "Linux" ] ; then
+    nw_if=$( netstat -rn | awk '/^0.0.0.0/ { print $NF }' | head -n1 )
+    ifstatus enp0s3 | grep -q "up"
+  else
+    nw_if=$( netstat -rn | awk '/^default/ { print $NF }' | head -n1 )
+    ifconfig $nw_if | grep -q " active"
+  fi
   if [ $? -eq 0 ] ; then
     v_output "network interface is active, good"
     v_output "trying to fetch data from blockchain.info"

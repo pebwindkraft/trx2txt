@@ -68,7 +68,7 @@ echo "#################################################################" >> $log
 echo "TESTCASE 1a: $chksum_cmd trx2txt.sh" | tee -a $logfile
 result=$( $chksum_cmd trx2txt.sh )
 echo $result | tee -a $logfile
-chksum_verify "$result" "SHA256(trx2txt.sh)= 169faa6f8d27ec15be5b9870456356a96f089b867b53d1b3006441e05728be09" 
+chksum_verify "$result" "SHA256(trx2txt.sh)= b107683ddbf4db5f92d0124f8694e020401e8240b43d7729dad00b2c23a87814" 
 
 echo "TESTCASE 1b: $chksum_cmd trx_in_sig_script.sh" | tee -a $logfile
 result=$( $chksum_cmd trx_in_sig_script.sh )
