@@ -44,11 +44,16 @@
 # 
 
 QUIET=0
+VERBOSE=0
 param=483045022100A428348FF55B2B59BC55DDACB1A00F4ECDABE282707BA5185D39FE9CDF05D7F0022074232DAE76965B6311CEA2D9E5708A0F137F4EA2B0E36D0818450C67C9BA259D0121025F95E8A33556E9D7311FA748E9434B333A4ECFB590C773480A196DEAB0DEDEE1
 
 case "$1" in
   -q)
      QUIET=1
+     shift
+     ;;
+  -v)
+     VERBOSE=1
      shift
      ;;
   -?|-h|--help)
@@ -78,6 +83,16 @@ if [ $# -eq 0 ] ; then
 else 
   param=$( echo $1 | tr "[:lower:]" "[:upper:]" )
 fi
+
+#################################
+### Some procedures first ... ###
+#################################
+
+v_output() {
+  if [ $VERBOSE -eq 1 ] ; then
+    echo $1
+  fi
+}
 
 ###################
 ### GET ADDRESS ###
@@ -149,7 +164,7 @@ S1_SIG_LEN_0x47() {
 ### STATUS 2 (S2_SIG_LEN_0x48)    ###
 #####################################
 S2_SIG_LEN_0x48() {
-  # if [ $QUIET -eq 0 ] ; then echo "S1_SIG_LEN_0x48"; fi
+  # if [ $QUIET -eq 0 ] ; then echo "S2_SIG_LEN_0x48"; fi
   get_next_opcode
   case $cur_opcode in
     30) echo "   $cur_opcode: OP_LENGTH_0x30"
@@ -180,10 +195,10 @@ S3_SIG_LEN_0x21() {
 ### STATUS 4 (S4_SIG_LEN_0x41)    ###
 #####################################
 S4_SIG_LEN_0x41() {
-  # get_next_opcode
+  v_output S4_SIG_LEN_0x41
   cur_opcode=${opcode_ar[offset]}
   case $cur_opcode in
-    41) echo "   $cur_opcode: OP_LENGTH_0X41"
+    04) echo "   $cur_opcode: OP_LENGTH_0X04"
         S20_PK 
         ;;
     *)  echo "   $cur_opcode: unknown opcode "
@@ -412,18 +427,125 @@ S19_PK() {
     # if [ $QUIET -eq 0 ] ; then echo "S19_PK"; fi
     cur_opcode_dec=33
     op_data_show
-    echo "* This is Public ECDSA Key, corresponding bitcoin address is:"
+    echo "* This is Public Key, corresponding bitcoin address is:"
     get_address
 }
 #####################################
 ### STATUS 20 ()                  ###
 #####################################
 S20_PK() {
-    # if [ $QUIET -eq 0 ] ; then echo "S20_PK"; fi
+    v_output S20_PK
     cur_opcode_dec=65
     op_data_show
-    echo "* This is Public ECDSA Key, corresponding bitcoin address is:"
+    echo "* This is Public Key, corresponding bitcoin address is:"
     get_address
+}
+#####################################
+### STATUS 21 (S21_SIG_LEN_0x49)  ###
+#####################################
+S21_SIG_LEN_0x49() {
+  # if [ $QUIET -eq 0 ] ; then echo "S21_SIG_LEN_0x49"; fi
+  get_next_opcode
+  case $cur_opcode in
+    30) echo "   $cur_opcode: OP_LENGTH_0x30"
+        S22_Sigtype
+        ;;
+    *)  echo "   $cur_opcode: unknown opcode "
+        ;;
+  esac
+}
+#####################################
+### STATUS 22 (S22_Sigtype)       ###
+#####################################
+S22_Sigtype () {
+  get_next_opcode
+  case $cur_opcode in
+    46) echo "   $cur_opcode: OP_LENGTH_0x46"
+        S23_Length
+        ;;
+    *)  echo "   $cur_opcode: unknown opcode "
+        ;;
+  esac
+}
+#####################################
+### STATUS 23 (S23_Length)        ###
+#####################################
+S23_Length() {
+  get_next_opcode
+  case $cur_opcode in
+    02) echo "   $cur_opcode: OP_INT_0x02"
+        S14_R_Length 
+        ;;
+    *)  echo "   $cur_opcode: unknown opcode "
+        ;;
+  esac
+}
+#####################################
+### STATUS 24 (S24_SIG_LEN_0x3C)  ###
+#####################################
+S24_SIG_LEN_0x3C() {
+  # if [ $QUIET -eq 0 ] ; then echo "S21_SIG_LEN_0x49"; fi
+  get_next_opcode
+  case $cur_opcode in
+    30) echo "   $cur_opcode: OP_LENGTH_0x30"
+        S25_Sigtype
+        ;;
+    *)  echo "   $cur_opcode: unknown opcode "
+        ;;
+  esac
+}
+#####################################
+### STATUS 25 (S25_Sigtype)       ###
+#####################################
+S25_Sigtype () {
+  get_next_opcode
+  case $cur_opcode in
+    39) echo "   $cur_opcode: OP_LENGTH_0x39"
+        S26_Length
+        ;;
+    *)  echo "   $cur_opcode: unknown opcode "
+        ;;
+  esac
+}
+#####################################
+### STATUS 26 (S26_Length)        ###
+#####################################
+S26_Length() {
+  get_next_opcode
+  case $cur_opcode in
+    02) echo "   $cur_opcode: OP_LENGTH_0x02"
+        S27_X_Length
+        ;;
+    *)  echo "   $cur_opcode: unknown opcode "
+        ;;
+  esac
+}
+#####################################
+### STATUS 27 (S27_SIG_X)         ###
+#####################################
+S27_X_Length() {
+  get_next_opcode
+  case $cur_opcode in
+    15) echo "   $cur_opcode: OP_INT_0x15 *** this is SIG X"
+        op_data_show 
+        S28_SIG_X
+        ;;
+    *)  echo "   $cur_opcode: unknown opcode "
+        ;;
+  esac
+}
+#####################################
+### STATUS 28 (S28_Y_Length)      ###
+#####################################
+S28_SIG_X() {
+  get_next_opcode
+  case $cur_opcode in
+    02) echo "   $cur_opcode: OP_LENGTH_0x02"
+        S16_S_Length
+        ;;
+    *)  echo "   $cur_opcode: unknown opcode "
+        ;;
+  esac
 }
 
 ##########################################################################
@@ -465,21 +587,27 @@ fi
 #####################################
   while [ $offset -lt $opcode_array_elements ]  
    do
-    # if [ $QUIET -eq 0 ] ; then echo "S0_INIT"; fi
+    v_output S0_INIT
     get_next_opcode
     
     case $cur_opcode in
+      21) echo "   $cur_opcode: OP_DATA_0x21"
+	  S3_SIG_LEN_0x21
+          ;;
+      3C) echo "   $cur_opcode: OP_DATA_0x3C"
+	  S24_SIG_LEN_0x3C
+          ;;
+      41) echo "   $cur_opcode: OP_DATA_0x41"
+	  S4_SIG_LEN_0x41
+          ;;
       47) echo "   $cur_opcode: OP_DATA_0x47"
           S1_SIG_LEN_0x47
           ;;
       48) echo "   $cur_opcode: OP_DATA_0x48"
 	  S2_SIG_LEN_0x48
           ;;
-      21) echo "   $cur_opcode: OP_DATA_0x21"
-	  S3_SIG_LEN_0x21
-          ;;
-      41) echo "   $cur_opcode: OP_DATA_0x41"
-	  S4_SIG_LEN_0x41
+      49) echo "   $cur_opcode: OP_DATA_0x49"
+	  S21_SIG_LEN_0x49
           ;;
       *)  echo "   $cur_opcode: unknown OpCode"
           ;;

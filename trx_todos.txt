@@ -1,0 +1,34 @@
+#####################################
+### Issues / errors in processing ###
+#####################################
+
+I1: 16jun16 svn:
+==================
+Testcase 7 does not recognize trx as P2SH, addresses are displayed wrong.
+
+I2: 16jun16 svn:
+==================
+finalize code for var-integers ...
+
+I3: 16jun17, svn:
+==================
+Testcase 9: does it display correctly? 0x3c as first OP_Data...
+
+I4: 17jun17, svn:
+==================
+When OP_DATA65 SIGHASH_ALL is used, then it is a non compressed public key. Conversion in base58check_enc.sh is not working ... before a call to base58check__enc.sh, we must do steps 2 and 3 of the docu: convert uncompressed pub key to sha256, and ripemd160 it!
+So we need another parameter from trx2txt.sh to base58check_enc.sh, that is either "1" to say, I have a public ECDSA key" (or uncompressed key), or a "3", which says, that it is already sha'd and ripemd160'd ...
+
+
+#####################################
+### Extensions / new Requirements ###
+#####################################
+E1:
+===============
+can it be extended for usage in testnet?
+
+E2: 
+===============
+exted it into a possibility to create raw transactions?
+(very long way ...)
+

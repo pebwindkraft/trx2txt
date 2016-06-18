@@ -27,5 +27,16 @@ date    by    file                   comment
 16jun15 svn   trx2txt.sh             add feature to load data from www.blockchain.info
 16jun15 svn   trx_testcases.sh       added checksum results into output
 16jun16 svn   trx_testcases.sh       added better parameter handling ([1-8])
-16jun15 svn   trx2txt.sh             fixed naming conventions ("TRANSACTION_ID")
+16jun16 svn   trx2txt.sh             fixed naming conventions ("TRANSACTION_ID")
+16jun16 svn   trx_in_sig_script.sh   added procedures S21-S23 
+16jun16 svn   trx_in_sig_state_machine.graphml - added S21 beginning with "OP_Data_0x49"
+16jun17 svn   trx2txt.sh             if TRX_IN sig script len=0, don't call trx_in_sig_script.sh
+16jun17 svn   trx_in_sig_state_machine.graphml - added S24 beginning with "OP_Data_0x3C"
+16jun18 svn   trx_out_pk_script.sh   fix state machine for OP_DATA33 and OP_DATA65 (P2PK)
+16jun18 svn   trx_out_pk_state_machine.graphml - updated S&_OP_Data65 and S11_OP_Data33 
+16jun18 svn   base58check_enc.sh     rework parameter handling 
+16jun18 svn   trx2txt.sh             adopted to fit parameter handling for base58check_enc.sh
+16jun18 svn   trx_in_sig_script.sh   adopted to fit parameter handling for base58check_enc.sh
+
+
 
