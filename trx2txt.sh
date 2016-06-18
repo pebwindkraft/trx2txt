@@ -394,7 +394,7 @@ do
   fi
   sig_script=$(echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }' )
   echo $sig_script 
-  if [ "$VVERBOSE" -eq 1 ] ; then
+  if [ "$VVERBOSE" -eq 1 ]  && [ $length -ne 0 ] ; then
     # echo $sig_script | $awk_cmd -f trx_in_sig_script.awk
     ./trx_in_sig_script.sh -q $sig_script 
     echo " "
@@ -541,15 +541,25 @@ do
   if [ "$VVERBOSE" -eq 1 ] && [ $pk_script_length_dez -ne 0 ] ; then
     result=$( sh ./trx_out_pk_script.sh -q $pk_script )
     echo "$result"
-    # only decode into bitcoin address, if we have 20 hex bytes length (40 chars)
-    # seems like bitcoin addresses can have also other length, but for now ... :-)
+    # only decode into bitcoin address, if
+    #   $result=20 hex bytes length (40 chars)
+    #   $result=65 hex bytes length (130 chars)
     # need to strip off any 2nd param (e.g. like "P2SH") for the length check
     result=$( echo "$result" | tail -n1 )
     len=$( echo $result | cut -d " " -f 1 )
     len=${#len}
+    if [ $len -eq 130 ] ; then
+      echo "and translates base58 encoded into this bitcoin address:"
+      echo "sh ./base58check_enc.sh -q -p1 $result"
+      sh ./base58check_enc.sh -q -p1 $result
+    fi
+    if [ $len -eq 66 ] ; then
+      echo "and translates base58 encoded into this bitcoin address:"
+      sh ./base58check_enc.sh -q -p3 $result
+    fi
     if [ $len -eq 40 ] ; then
       echo "and translates base58 encoded into this bitcoin address:"
-      sh ./base58check_enc.sh -q $result
+      sh ./base58check_enc.sh -q -p3 $result
     fi
   fi
   offset=$(($offset + $length))

@@ -110,6 +110,7 @@ This shell script tries to decode the addresses in BITCOIN SCRIPTs. It reads the
 1AkUKA3NNQt4gs3GGexhacnkSMcmYHsN3S
 
 The "-q" parameter is for "quiet" output. Without it, script will display details on the steps. 
+There is also a "-h"parameter, which displays a help text. Further details there...
 
 
 #############################
@@ -131,11 +132,11 @@ which provides a hash of all hashes. This can be easily compared on all platform
 ./trx_testcases.sh -l|--log
 "-l", a log file ("trx_testcases.sh.log") is created. All checks are performed.
 
-./trx_testcases.sh -?|-h|--help
+./trx_testcases.sh -h|--help
 "-h" displays a help text
 
-./trx_testcases.sh 1|2|3|4|5|6|7|8
-[1-8] runs the specific testcases, to get quickly the sha256 hashes
+./trx_testcases.sh 1|2|3|4|5|6|7|8|9
+[1-9] runs the specific testcases, to get quickly the sha256 hashes
 
 
 #########################

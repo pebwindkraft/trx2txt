@@ -210,7 +210,7 @@ S10_P2SH() {
     echo "* This is a P2SH script"
     # we add a "P2SH" string at the end, to notify the following 
     # base58encode script about this special adress
-    ret_string="$ret_string P2SH"
+    ret_string="$ret_string -P2SH"
 }
 #####################################
 ### STATUS 11 (OP_DATA33)         ###
@@ -443,6 +443,7 @@ fi
 	  S26_UNKNOWN
           ;;
       41) echo "   $cur_opcode: OP_DATA65"
+          op_data_show
 	  S6_OP_DATA65
           ;;
       *)
