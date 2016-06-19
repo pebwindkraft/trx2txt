@@ -37,6 +37,7 @@ date    by    file                   comment
 16jun18 svn   base58check_enc.sh     rework parameter handling 
 16jun18 svn   trx2txt.sh             adopted to fit parameter handling for base58check_enc.sh
 16jun18 svn   trx_in_sig_script.sh   adopted to fit parameter handling for base58check_enc.sh
+16jun19 svn   trx2txt.sh             fixing "var_int" or "compact size integers
 
 
 
