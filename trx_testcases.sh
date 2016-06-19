@@ -39,7 +39,7 @@ echo "#################################################################" >> $log
 echo "TESTCASE 1a: $chksum_cmd trx2txt.sh" | tee -a $logfile
 result=$( $chksum_cmd trx2txt.sh )
 echo $result | tee -a $logfile
-chksum_verify "$result" "SHA256(trx2txt.sh)= f9edb381ef544c5a2032f46964973716eb174d4a6428c569c3b20fd7c6a8ffd9" 
+chksum_verify "$result" "SHA256(trx2txt.sh)= 721690374ff597c1da732d5c6537e8dfc5f853ddcb0e0fed2e69607f5fc27061" 
 
 echo "TESTCASE 1b: $chksum_cmd trx_in_sig_script.sh" | tee -a $logfile
 result=$( $chksum_cmd trx_in_sig_script.sh )
@@ -182,7 +182,7 @@ else
   result=$( $chksum_cmd tmpfile )
   echo $result
 fi
-chksum_verify "$result" "SHA256(tmpfile)= e6ac2c9bc6b3e40541a1a3ddd5984220e6aa98ac4c24cc1271ca64ec3d3ae1d2" 
+chksum_verify "$result" "SHA256(tmpfile)= e3f6a1cfc31516ee17d93149c3bc72f05257f8036ce10d35e8df6a17e2f6f452" 
 
 echo "TESTCASE 2j: " | tee -a $logfile
 if [ $LOG -eq 1 ] ; then
@@ -194,7 +194,7 @@ else
   result=$( $chksum_cmd tmpfile )
   echo $result
 fi
-chksum_verify "$result" "SHA256(tmpfile)= 0fcc3cb01aad378b299072550db26990a5ebbe3f621107be8064b96d979a2e39" 
+chksum_verify "$result" "SHA256(tmpfile)= 895958cc67d623ca448c4a722f4bac031ecdd04da5a8bf2ec874cf413b310b93" 
 echo " " | tee -a $logfile
 }
 
@@ -207,7 +207,7 @@ echo "###  we check functionality to load data via -t parameter     ###" >> $log
 echo "###  from https://blockcahin.info ...                         ###" >> $logfile
 echo "###  this is a fairly simple trx, 1 input, 1 output           ###" >> $logfile
 echo "#################################################################" >> $logfile
-echo "https://blockchain.info/de/rawtx/30375f40adcf361f5b2a5074b615ca75e5696909e8bc2f8e553c69631826fcf6" >> $logfile
+echo "https://blockchain.info/de/rawtx/30375f40adcf361f5b2a5074b615ca75e5696909e8bc2f8e553c69631826fcf6" | tee -a $logfile
 
 echo "TESTCASE 3a: " | tee -a $logfile
 if [ $LOG -eq 1 ] ; then
@@ -231,7 +231,7 @@ else
   result=$( $chksum_cmd tmpfile )
   echo $result
 fi
-chksum_verify "$result" "SHA256(tmpfile)= a9011157769d19db63d994ebb05af78cc7d8671448637f1bc8305ac2eed052de"
+chksum_verify "$result" "SHA256(tmpfile)= 685432cb92ee944b9c731cd8c97ab5c4112e0b2a9cfa98e7c12e69318d5628a7"
 
 echo "TESTCASE 3c: " | tee -a $logfile
 if [ $LOG -eq 1 ] ; then
@@ -243,9 +243,10 @@ else
   result=$( $chksum_cmd tmpfile )
   echo $result
 fi
-chksum_verify "$result" "SHA256(tmpfile)= 22319b3ff988da419a28a6f8964d7a696c6381eee880a125d0b84ecfd463ae20"
+chksum_verify "$result" "SHA256(tmpfile)= 1a091254e49002b9740015698161dfd0df60a98ecccc1bad68534bea9d459cd0"
 echo " " | tee -a $logfile
 }
+
 
 testcase4() {
 # this is a fairly simple trx, 1 input, 2 outputs
@@ -254,7 +255,7 @@ echo "### TESTCASE 4:                                               ###" | tee -
 echo "#################################################################" | tee -a $logfile
 echo "###  this is a fairly simple trx, 1 input, 2 outputs          ###" >> $logfile
 echo "#################################################################" >> $logfile
-echo "https://blockchain.info/de/rawtx/91c91f31b7586b807d0ddc7a1670d10cc34bdef326affc945d4987704c7eed62" >> $logfile
+echo "https://blockchain.info/de/rawtx/91c91f31b7586b807d0ddc7a1670d10cc34bdef326affc945d4987704c7eed62" | tee -a $logfile
 
 echo "TESTCASE 4a: " | tee -a $logfile
 if [ $LOG -eq 1 ] ; then
@@ -278,7 +279,7 @@ else
   result=$( $chksum_cmd tmpfile )
   echo $result
 fi
-chksum_verify "$result" "SHA256(tmpfile)= cd6df91d6fd4c04c10f7e48163b1650fbaeda056b655fa80f42c1f205c37a15b"
+chksum_verify "$result" "SHA256(tmpfile)= c9b59d7bfcd9b5b8ab9b624ee5d4beef75e7aa875fa6e6a733ebd4da839d321c"
 
 echo "TESTCASE 4c: " | tee -a $logfile
 if [ $LOG -eq 1 ] ; then
@@ -290,7 +291,7 @@ else
   result=$( $chksum_cmd tmpfile )
   echo $result
 fi
-chksum_verify "$result" "SHA256(tmpfile)= daef4a4649bae1ad856845d34a5cb27b7803080cdd58a7bab0ec99d1492e6bcb"
+chksum_verify "$result" "SHA256(tmpfile)= 89057b91c783743fc84e17c0a56cd9272a1490adaeb35f271c929d6a1a32c8ce"
 echo " " | tee -a $logfile
 }
 
@@ -301,7 +302,7 @@ echo "### TESTCASE 5:                                               ###" | tee -
 echo "#################################################################" | tee -a $logfile
 echo "###  this is a fairly simple trx, 3 inputs, 1 P2SH output     ###" >> $logfile
 echo "#################################################################" >> $logfile
-echo "https://blockchain.info/de/rawtx/4f292aeff2ad2da37b5d5719bf34846938cf96ea7e75c8715bc3edac01b39589" >> $logfile
+echo "https://blockchain.info/de/rawtx/4f292aeff2ad2da37b5d5719bf34846938cf96ea7e75c8715bc3edac01b39589" | tee -a $logfile
 
 echo "TESTCASE 5a: " | tee -a $logfile
 if [ $LOG -eq 1 ] ; then
@@ -325,7 +326,8 @@ else
   result=$( $chksum_cmd tmpfile )
   echo $result
 fi
-chksum_verify "$result" "SHA256(tmpfile)= c44efc6f107dd2dab02ffc7bf673478b545804c6933912b0faec31791048036c"
+chksum_verify "$result" "SHA256(tmpfile)= 0fa8453e3e216fa091c01a260b85962df7b2bc95ecfa9cafc8093b2522094682"
+
 
 echo "TESTCASE 5c: " | tee -a $logfile
 if [ $LOG -eq 1 ] ; then
@@ -337,7 +339,7 @@ else
   result=$( $chksum_cmd tmpfile )
   echo $result
 fi
-chksum_verify "$result" "SHA256(tmpfile)= 7bff06301da8478797246774f4cc5a1e67afa850d4bdc9092d12e04c6c9bb6fc"
+chksum_verify "$result" "SHA256(tmpfile)= 5afd8b5b672ccc14f7366bcd2bec86a84a73662e7a87b72a8d4062b6092255b3"
 echo " " | tee -a $logfile
 }
 
@@ -349,7 +351,7 @@ echo "#################################################################" | tee -
 echo "###  this trx has 1 input, and 4 outputs.                     ###" >> $logfile
 echo "###  trx-in sequence = feffffff - what does this mean?        ###" >> $logfile
 echo "#################################################################" >> $logfile
-echo "https://blockchain.info/de/rawtx/7264f8ba4a85a4780c549bf04a98e8de4c9cb1120cb1dfe8ab85ff6832eff864" >> $logfile
+echo "https://blockchain.info/de/rawtx/7264f8ba4a85a4780c549bf04a98e8de4c9cb1120cb1dfe8ab85ff6832eff864" | tee -a $logfile
 
 echo "TESTCASE 6a: " | tee -a $logfile
 if [ $LOG -eq 1 ] ; then
@@ -373,7 +375,7 @@ else
   result=$( $chksum_cmd tmpfile )
   echo $result
 fi
-chksum_verify "$result" "SHA256(tmpfile)= 33801c2b908c2e942b6a3cce08aa5c42e8de488b8ee74e7cdb4de72eb8b2f64f"
+chksum_verify "$result" "SHA256(tmpfile)= b2e2f86968a695b0e4b19f35ba9ce6b212137ce220992e29b2d42ac283d10976"
 
 echo "TESTCASE 6c: " | tee -a $logfile
 if [ $LOG -eq 1 ] ; then
@@ -385,7 +387,7 @@ else
   result=$( $chksum_cmd tmpfile )
   echo $result
 fi
-chksum_verify "$result" "SHA256(tmpfile)= efd10c6ed5dbb1cdc562b398636e790b2ce5ac2bb4b0c5e5782f9b6541e99c7a"
+chksum_verify "$result" "SHA256(tmpfile)= 859ca52491f4e403ecb0b7206b8e58856b465d1b26147aa5af22cd2e59ecf56e"
 echo " " | tee -a $logfile
 }
 
@@ -418,7 +420,7 @@ echo "###                                                           ###" >> $log
 echo "###  trx-in script len seems to be '0xda'. Script then starts ###" >> $logfile
 echo "###  with '00483045...', what does this mean, where is docu ? ###" >> $logfile
 echo "#################################################################" >> $logfile
-echo "https://blockchain.info/de/rawtx/c0889855c93eed67d1f5a6b8a31e446e3327ce03bc267f2db958e79802941c73" >> $logfile
+echo "https://blockchain.info/de/rawtx/c0889855c93eed67d1f5a6b8a31e446e3327ce03bc267f2db958e79802941c73" | tee -a $logfile
 
 echo "TESTCASE 7a: " | tee -a $logfile
 if [ $LOG -eq 1 ] ; then
@@ -442,7 +444,7 @@ else
   result=$( $chksum_cmd tmpfile )
   echo $result
 fi
-chksum_verify "$result" "SHA256(tmpfile)= b7ba1c017f81639445a96badb996d2a99110d43f53402abfd71d9426f0c70ac9"
+chksum_verify "$result" "SHA256(tmpfile)= 6c2b32e89dbf90f48cb364303d9b07aba8bb5749a1df9ca405602d57db4f3ea2"
 
 echo "TESTCASE 7c: " | tee -a $logfile
 if [ $LOG -eq 1 ] ; then
@@ -454,7 +456,7 @@ else
   result=$( $chksum_cmd tmpfile )
   echo $result
 fi
-chksum_verify "$result" "SHA256(tmpfile)= 5106ba53b1b9173f37b105a8a949105df740c8892f451f1ea5eb81835e36afb3"
+chksum_verify "$result" "SHA256(tmpfile)= 2f93a731138d312282a5b9a1f444df502922e6324c1afacbb6b0e542e3426eb4"
 echo " " | tee -a $logfile
 }
 
@@ -469,7 +471,7 @@ echo "###  the trx-in script sig is having more than one signature. ###" >> $log
 echo "###  Blockchain.info shows only a single one...               ###" >> $logfile
 echo "###  docu? support?                                           ###" >> $logfile
 echo "#################################################################" >> $logfile
-echo "https://blockchain.info/de/rawtx/ea9462053d74024ec46dac07c450200194051020698e8640a5a024d8ac085590" >> $logfile
+echo "https://blockchain.info/de/rawtx/ea9462053d74024ec46dac07c450200194051020698e8640a5a024d8ac085590" | tee -a $logfile
 
 echo "TESTCASE 8a: " | tee -a $logfile
 if [ $LOG -eq 1 ] ; then
@@ -493,7 +495,7 @@ else
   result=$( $chksum_cmd tmpfile )
   echo $result
 fi
-chksum_verify "$result" "SHA256(tmpfile)= da90aa615a98d3ad5cdedc31d0103e566fd3080cdb0d692d9dcd2994c66fe580"
+chksum_verify "$result" "SHA256(tmpfile)= c8805b1aa8fdf075e9620f68d21bf130c1b693aa82982c1cdd4f29d5ded1cb57"
 
 echo "TESTCASE 8c: " | tee -a $logfile
 if [ $LOG -eq 1 ] ; then
@@ -505,7 +507,7 @@ else
   result=$( $chksum_cmd tmpfile )
   echo $result
 fi
-chksum_verify "$result" "SHA256(tmpfile)= bbe8293dee7a176700d71c2741f08d69b16833789e77d96b31034b8d52901c98"
+chksum_verify "$result" "SHA256(tmpfile)= 94449c18a960753489dd3dceef92d5c71cd6e3dbe80730670d7edd6426696c01"
 echo " " | tee -a $logfile
 }
 
@@ -516,7 +518,7 @@ echo "### TESTCASE 9:                                               ###" | tee -
 echo "#################################################################" | tee -a $logfile
 echo "###  this trx has 35 output scripts ...                       ###" >> $logfile
 echo "#################################################################" >> $logfile
-echo "https://blockchain.info/https://blockchain.info/de/rawtx/7c83fe5ba301e655973e9de8eb9fb5e20ef3a6dd9b46c503679c858399eda50f" >> $logfile
+echo "https://blockchain.info/de/rawtx/7c83fe5ba301e655973e9de8eb9fb5e20ef3a6dd9b46c503679c858399eda50f" | tee -a $logfile
 
 echo "TESTCASE 9a: " | tee -a $logfile
 if [ $LOG -eq 1 ] ; then
@@ -531,7 +533,6 @@ fi
 chksum_verify "$result" "SHA256(tmpfile)= 0a1f0b6c5dce37e107665674fdc38eb786f7b1c434989ea1ce8b0c4658240fc7"
 
 echo "TESTCASE 9b: " | tee -a $logfile
-
 if [ $LOG -eq 1 ] ; then
   ./trx2txt.sh -v -r 01000000014675ab74e5c496c8eecaaa87c6136bc68ebaaac7a25e70ee29b7bbaffad6810f000000008b4830450220296d4f4869a63efdee4c5ea31dcad559b4e03332462ba5442bfdf00a662cb77102210088a7f10361eae3e159ae6a8b5b7a569bf6bfa2de64fb3f5d0552f8be568ba6f50141042a9a97b2109ef496ffb1033576a5635cecc6ab679ad0b7c43d33ddf38b1f44c22ea42d5c01ac2752094ff81e79dda77d8b501a64102207c45fb89ea1ad9229ddffffffff23e8030000000000001976a914801314cd462b98c64dd4c3f4d6474cad11ea39d588ace8030000000000001976a9145bb7d22851413e1d61e8db5395a8c7c537256ea088ace8030000000000001976a914371f197d5ba5e32bd98260eec7f0e51227b6969088ace8030000000000001976a9143e546d0acc0de5aa3d66d7a920900ecbc66c203188ace8030000000000001976a9140337e0710056f114c9c469a68775498df9f9fa1688ace8030000000000001976a9149c628c82aa7b81da7c6a235049eb2979c4a65cfc88ace8030000000000001976a914cd1d7e863f891c493e093ada840ef5a67ad2d6cc88ace8030000000000001976a91476f074340381e6f8a40aec4a6e2d92485679412c88ace8030000000000001976a9140fb87a5071385b6976397d1c53ee16f09139a33488ace8030000000000001976a9143d37873ffd2964a1a4c8bade4852020ec5426d3688ace8030000000000001976a9145d14a857fce8da8edfb8f7d1c4bbc316622b722788ace8030000000000001976a9140a77fdb4cc81631b6ea2991ff60b47d57812d8e788ace8030000000000001976a91454514fe9251b5e381d13171cd6fca63f61d8b72688ace8030000000000001976a914cffe3e032a686cc3f2c9e417865afa8a52ed962b88ace8030000000000001976a914fd9dc3525076c1ffe9c33389ea157d07af2e41d488ace8030000000000001976a9143bedfe927d55a8c8adfe5e4b5dddd4ea3487b4c988ace8030000000000001976a914e49275e86ece605f271f26a9559520eb9c0ae8d888ace8030000000000001976a91469256ba90b0d7e406d86a51d343d157ff0aab7bd88ace8030000000000001976a9148ab0cb809cd893cb0cb16f647d024db94f09d76588ace8030000000000001976a9140688e383f02b528c92e25caae5785ffaa81a26aa88ace8030000000000001976a914d959be6c92037995558f43a55b1c271628f96e8d88ac8038f240000000001976a914d15e54e341d538ce3e9e7596e0dbcda8c12cc08988ace8030000000000001976a91495019a8168e8dcd2ef2d47ca57c1bf49358eb6fe88ace8030000000000001976a914caf67cfe28b511498b0d1792bedeec6b6e8a3c8d88ace8030000000000001976a914082a3adf4c8497fbd7d90f21cbec318b0dfdd2b288ace8030000000000001976a9144c53722fd5b0bc8a5b23ae4efc6233142b69d8ee88ace8030000000000001976a9146abd1edce61a7fdd2d134e8468560ecffb45334e88ace8030000000000001976a914dc3343b674cf2016b8968e6146ba5cc9228f14a488ace8030000000000001976a9145f395a91d07712604d7cd6fabd685b9bfd3900dd88ace8030000000000001976a914fc35239072cd5c19d9f761996951679fb03bb43188ace8030000000000001976a914b1ec1d5e0591abbbe3134c94c37e74d034b9312288ace8030000000000001976a9142d6351944aa38af6aa46d4a74cbb9016cf19ee7e88ace8030000000000001976a914879a49b3822806e0322565d457ce2b5989adaa6188ace8030000000000001976a9145ff26e3f8d542c5bb612e539649eaec0222afc3c88ace8030000000000001976a914105d54a4edcbe114a50bb01c79d230b7ed74a3e488ac00000000 >> $logfile
   echo "##=======================================================================##" | tee -a $logfile
@@ -541,7 +542,7 @@ else
   result=$( $chksum_cmd tmpfile )
   echo $result
 fi
-chksum_verify "$result" "SHA256(tmpfile)= 348af0e1fa48b20486604a28f76d4eff3bee1bbbdcfd9b2b51684f70e2b9d838"
+chksum_verify "$result" "SHA256(tmpfile)= 27cdb3f64ffe133ddb80602efb9f53c2369cde8a25aa8d4b22d33643388cd4c1"
 
 echo "TESTCASE 9c: " | tee -a $logfile
 if [ $LOG -eq 1 ] ; then
@@ -553,7 +554,7 @@ else
   result=$( $chksum_cmd tmpfile )
   echo $result
 fi
-chksum_verify "$result" "SHA256(tmpfile)= a54195209225363f1811139cb83daae78244eff7353ec233512af5d6bd1f8735"
+chksum_verify "$result" "SHA256(tmpfile)= df9fe79f8380e40d083766f7f0e754d5eb9af5ea910fc33e7ff1597f543263a7"
 echo " " | tee -a $logfile
 }
 

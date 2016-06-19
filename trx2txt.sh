@@ -34,9 +34,13 @@ RAW_TRX=''
 RAW_TRX_LINK=https://blockchain.info/de/rawtx/cc8a279b0736e6a2cc20b324acc5aa688b3af7b63bbb002f46f6573c1ad84408
 RAW_TRX_LINK2HEX="?format=hex"
 RAW_TRX_DEFAULT=010000000253603b3fdb9d5e10de2172305ff68f4b5227310ba6bd81d4e1bf60c0de6183bc010000006a4730440220128487f04a591c43d7a6556fff9158999b46d6119c1a4d4cf1f5d0ac1dd57a94022061556761e9e1b1e656c0a70aa7b3e83454cd61662df61ebdc31e43196b5e0c10012102b12126a716ce7bbb84703bcfbf0afa80283c75a7304a48cd311a5027efd906c2ffffffff0e52c4701577287b6dd02f422c2a8033fa0b4614f75fa9f0a5c4ab69634b5ba7000000006b483045022100a428348ff55b2b59bc55ddacb1a00f4ecdabe282707ba5185d39fe9cdf05d7f0022074232dae76965b6311cea2d9e5708a0f137f4ea2b0e36d0818450c67c9ba259d0121025f95e8a33556e9d7311fa748e9434b333a4ecfb590c773480a196deab0dedee1ffffffff0290257300000000001976a914fca68658b537382e27a85522d292e1ad9543fe0488ac98381100000000001976a9146af1d17462c6146a8a61217e8648903acd3335f188ac00000000
+V_INT=0
 VERBOSE=0
 VVERBOSE=0
 
+#################################
+# procedure to display helptext #
+#################################
 proc_help() {
   echo "  "
   echo "usage: trx2txt.sh [-h|--help|-r|--rawtrx|-t|--trx|-v|--verbose|-vv] [[raw]trx]"
@@ -54,26 +58,68 @@ proc_help() {
   echo " "
 }
 
+#######################################
+# procedure to display verbose output #
+#######################################
 v_output() {
   if [ $VERBOSE -eq 1 ] ; then
     echo $1
   fi
 }
 
+#################################################
+# procedure to display even more verbose output #
+#################################################
 vv_output() {
   if [ $VVERBOSE -eq 1 ] ; then
     echo $1
   fi
 }
 
-################################
-# command line params handling #
-################################
+###############################################################
+# procedure to calculate value of var_int or compact size int #
+###############################################################
+# 
+# var_int is defined as:
+# value         size Format
+# < 0xfd        1    uint8_t
+# <= 0xffff     3    0xfd + uint16_t
+# <= 0xffffffff 5    0xfe + uint32_t
+# -             9    0xff + uint64_t 
+# if value <= 0xfd, length = 2
+# if value =  0xfd, offset = offset + 2, length = 4
+# if value =  0xfe, offset = offset + 2, length = 8
+# if value =  0xff, offset = offset + 2, length = 16
+proc_var_int() {
+  length=2
+  V_INT=$( echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }' )
+  if [ "$V_INT" == "FD" ] ; then
+    offset=$(($offset + 2 ))
+    length=4
+    V_INT=$( echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }' )
+    # echo "FD: V_INT=$V_INT"
+  elif [ "$V_INT" == "FE" ] ; then
+    offset=$(($offset + 2 ))
+    length=8
+    V_INT=$( echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }' )
+    # echo "FE: V_INT=$V_INT"
+  elif [ "$V_INT" == "FF" ] ; then
+    offset=$(($offset + 2 ))
+    length=16
+    V_INT=$( echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }' )
+    # echo "FF: V_INT=$V_INT"
+  fi
+}
+
 
 echo "#################################################################"
 echo "### trx2txt.sh: script to de-serialize/decode a Bitcoin trx   ###"
 echo "#################################################################"
 echo "  "
+
+################################
+# command line params handling #
+################################
 
 if [ $# -eq 0 ] ; then
   echo "no parameter(s) given, using defaults"
@@ -298,24 +344,10 @@ offset=$(($offset + $length))
 ##############################################################################
 if [ "$VERBOSE" -eq 1 ] ; then
   echo " "
-  echo "### TX_IN COUNT"
+  echo "### TX_IN COUNT [var_int]"
 fi
-# 
-# var_int is defined as:
-# value         size Format
-# < 0xfd        1    uint8_t
-# <= 0xffff     3    0xfd + uint16_t
-# <= 0xffffffff 5    0xfe + uint32_t
-# -             9    0xff + uint64_t 
-# if value eq negative, length = 18
-# if ${RAW_TRX:offset:1} == "negative" then length = 18
-# if value <= 0xffffffff, length = 10
-# if ${RAW_TRX:offset:4} == "ffff" then length = 10
-# if value <= 0xffff, length = 6
-# if ${RAW_TRX:offset:1} == "f" and ${RAW_TRX:offset+1:1} == "d" then length = 6
-length=2
-# tx_in_count_hex=$( echo ${RAW_TRX:offset:length} )
-tx_in_count_hex=$( echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }' )
+proc_var_int
+tx_in_count_hex=$V_INT
 tx_in_count_dez=$( echo "ibase=16; $tx_in_count_hex"|bc) 
 if [ "$VERBOSE" -eq 1 ] ; then
   echo "hex=$tx_in_count_hex, dez=$tx_in_count_dez"
@@ -364,21 +396,8 @@ do
   echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }'
   offset=$(($offset + $length))
   
-  # var_int is defined as:
-  # value         size Format
-  # < 0xfd        1    uint8_t
-  # <= 0xffff     3    0xfd + uint16_t
-  # <= 0xffffffff 5    0xfe + uint32_t
-  # -             9    0xff + uint64_t 
-  # if value eq negative, length = 18
-  # if ${RAW_TRX:offset:1} == "negative" then length = 18
-  # if value <= 0xffffffff, length = 10
-  # if ${RAW_TRX:offset:4} == "ffff" then length = 10
-  # if value <= 0xffff, length = 6
-  # if ${RAW_TRX:offset:1} == "f" and ${RAW_TRX:offset+1:1} == "d" then length = 6
-  length=2
-  # script_length_hex=$( echo ${RAW_TRX:offset:length} )
-  script_length_hex=$( echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }' )
+  proc_var_int
+  script_length_hex=$V_INT
   script_length_dez=$( echo "ibase=16; $script_length_hex"|bc) 
   if [ "$VERBOSE" -eq 1 ] ; then
     echo "###   Script Length[$LOOPCOUNTER] (var_int)"
@@ -426,19 +445,6 @@ if [ "$VERBOSE" -eq 1 ] ; then
   echo " "
   echo "### TX_OUT COUNT"
 fi
-# 
-# var_int is defined as:
-# value         size Format
-# < 0xfd        1    uint8_t
-# <= 0xffff     3    0xfd + uint16_t
-# <= 0xffffffff 5    0xfe + uint32_t
-# -             9    0xff + uint64_t 
-# if value eq negative, length = 18
-# if ${RAW_TRX:offset:1} == "negative" then length = 18
-# if value <= 0xffffffff, length = 10
-# if ${RAW_TRX:offset:4} == "ffff" then length = 10
-# if value <= 0xffff, length = 6
-# if ${RAW_TRX:offset:1} == "f" and ${RAW_TRX:offset+1:1} == "d" then length = 6
 length=2
 # tx_out_count_hex=$( echo ${RAW_TRX:offset:length} )
 tx_out_count_hex=$( echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }' )
@@ -506,22 +512,8 @@ do
   fi
   offset=$(($offset + $length))
 
-  # var_int is defined as:
-  # value         size Format
-  # < 0xfd        1    uint8_t
-  # <= 0xffff     3    0xfd + uint16_t
-  # <= 0xffffffff 5    0xfe + uint32_t
-  # -             9    0xff + uint64_t 
-  # if value eq negative, length = 18
-  # if ${RAW_TRX:offset:1} == "negative" then length = 18
-  # if value <= 0xffffffff, length = 10
-  # if ${RAW_TRX:offset:4} == "ffff" then length = 10
-  # if value <= 0xffff, length = 6
-  # if ${RAW_TRX:offset:1} == "f" and ${RAW_TRX:offset+1:1} == "d" then length = 6
-  #
-  length=2
-  # pk_script_length_hex=$( echo ${RAW_TRX:offset:length} )
-  pk_script_length_hex=$( echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }' )
+  proc_var_int
+  pk_script_length_hex=$V_INT
   pk_script_length_dez=$( echo "ibase=16; $pk_script_length_hex"|bc) 
   if [ "$VERBOSE" -eq 1 ] ; then
     echo "###   PK_Script Length[$LOOPCOUNTER] (var_int)"
