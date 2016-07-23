@@ -32,6 +32,26 @@
 #  where the r and s values are non-negative, and don't exceed 33 bytes 
 #  including a possible padding zero byte.
 #
+#  Pieter Wuille, August 2013 
+#    (http://bitcoin.stackexchange.com/questions/12554/
+#            why-the-signature-is-always-65-13232-bytes-long/12556#12556)
+#  A correct DER-encoded signature has the following form:
+#
+#   0x30: a header byte indicating a compound structure.
+#   A 1-byte length descriptor for all what follows.
+#   0x02: a header byte indicating an integer.
+#   A 1-byte length descriptor for the R value
+#   The R coordinate, as a big-endian integer.
+#   0x02: a header byte indicating an integer.
+#   A 1-byte length descriptor for the S value.
+#   The S coordinate, as a big-endian integer.
+#
+#  Where initial 0x00 bytes for R and S are not allowed, except when their 
+#  first byte would otherwise be above 0x7F (in which case a single 0x00 in 
+#  front is required). Also note that inside transaction signatures, an 
+#  extra hashtype byte follows the actual signature data.
+#
+#
 # from: https://bitcointalk.org/index.php?topic=1383883.0
 #  Unless the bottom 5 bits are 0x02 (SIGHASH_NONE) or 0x03 (SIGHASH_SINGLE), 
 #  all the outputs are included.  If the bit for 0x20 is set, then all inputs 
@@ -107,7 +127,7 @@ get_address() {
   result=$( printf "$result" | openssl dgst -sha256 | cut -d " " -f 2 )
   result=$( echo $result | sed 's/[[:xdigit:]]\{2\}/\\x&/g' )
   result=$( printf "$result" | openssl dgst -rmd160 | cut -d " " -f 2 )
-  ./base58check_enc.sh -q $result
+  ./trx_base58check_enc.sh -q $result
 }
 ############################################################
 ### procedure to show data separated by colon or newline ###
@@ -224,7 +244,7 @@ S5_Sigtype() {
 S6_Length() {
   get_next_opcode
   case $cur_opcode in
-    01) echo "   $cur_opcode: OP_SIGHASHALL *** This terminates the signature"
+    01) echo "   $cur_opcode: OP_SIGHASHALL *** This terminates the ECDSA signature (ASN1-DER structure)"
         S11_SIG 
         ;;
     02) echo "   $cur_opcode: OP_R_INT_0x02"
@@ -291,13 +311,13 @@ S9_S_Length() {
 S10_SIG_S() {
   get_next_opcode
   case $cur_opcode in
-    01) echo "   $cur_opcode: OP_SIGHASHALL *** This terminates the sigs"
+    01) echo "   $cur_opcode: OP_SIGHASHALL *** This terminates the ECDSA signature (ASN1-DER structure)"
         S11_SIG 
         ;;
-    02) echo "   $cur_opcode: OP_SIGHASH_NONE *** This terminates the sigs"
+    02) echo "   $cur_opcode: OP_SIGHASHALL *** This terminates the ECDSA signature (ASN1-DER structure)"
         S11_SIG 
         ;;
-    03) echo "   $cur_opcode: OP_SIGHASH_SINGLE *** This terminates the sigs"
+    03) echo "   $cur_opcode: OP_SIGHASHALL *** This terminates the ECDSA signature (ASN1-DER structure)"
         S11_SIG 
         ;;
     *)  echo "   $cur_opcode: unknown opcode "
@@ -401,13 +421,7 @@ S16_S_Length() {
 S17_SIG_S() {
   get_next_opcode
   case $cur_opcode in
-    01) echo "   $cur_opcode: OP_SIGHASHALL *** This terminates the sigs"
-        S11_SIG 
-        ;;
-    03) echo "   $cur_opcode: OP_SIGHASH_SINGLE *** This terminates the sigs"
-        S11_SIG 
-        ;;
-    01) echo "   $cur_opcode: OP_SIGHASHALL *** This terminates the sigs"
+    01) echo "   $cur_opcode: OP_SIGHASHALL *** This terminates the ECDSA signature (ASN1-DER structure)"
         S18_SIG 
         ;;
     *)  echo "   $cur_opcode: unknown opcode "
@@ -427,7 +441,8 @@ S19_PK() {
     # if [ $QUIET -eq 0 ] ; then echo "S19_PK"; fi
     cur_opcode_dec=33
     op_data_show
-    echo "* This is Public Key, corresponding bitcoin address is:"
+    echo "* This terminates the Public Key (X9.63 COMPRESSED form)"
+    echo "* corresponding bitcoin address is:"
     get_address
 }
 #####################################
@@ -437,7 +452,8 @@ S20_PK() {
     v_output S20_PK
     cur_opcode_dec=65
     op_data_show
-    echo "* This is Public Key, corresponding bitcoin address is:"
+    echo "* This terminates the Public Key (X9.63 UNCOMPRESSED form)"
+    echo "* corresponding bitcoin address is:"
     get_address
 }
 #####################################
@@ -548,6 +564,65 @@ S28_SIG_X() {
   esac
 }
 
+#####################################
+### STATUS 30 (OP_DUP)            ###
+#####################################
+S30_OP_DUP() {
+  get_next_opcode
+  case $cur_opcode in
+    A9) echo "   $cur_opcode: OP_HASH160"
+        S31_OP_HASH160
+        ;;
+    *)  echo "   $cur_opcode: unknown opcode "
+        ;;
+  esac
+}
+#####################################
+### STATUS 31 (OP_HASH160)        ###
+#####################################
+S31_OP_HASH160() {
+  get_next_opcode
+  case $cur_opcode in
+    14) echo "   $cur_opcode: OP_Data$cur_opcode (= decimal $cur_opcode_dec)"
+        op_data_show
+        S32_OP_DATA20
+        ;;
+    *)  echo "   $cur_opcode: unknown opcode "
+        ;;
+  esac
+}
+#####################################
+### STATUS 32 (OP_DATA20)         ###
+#####################################
+S32_OP_DATA20() {
+  get_next_opcode
+  case "$cur_opcode" in
+    88) echo "   $cur_opcode: OP_EQUALVERIFY"
+        S33_OP_EQUALVERIFY
+        ;;
+    *)  echo "   $cur_opcode: unknown opcode "
+        ;;
+  esac
+}
+#####################################
+### STATUS 33 (OP_EQUALVERIFY)    ###
+#####################################
+S33_OP_EQUALVERIFY() {
+  get_next_opcode
+  case $cur_opcode in
+    AC) echo "   $cur_opcode: OP_CHECKSIG"
+        S34_P2PKH
+        ;;
+    *)  echo "   $cur_opcode: unknown opcode "
+        ;;
+  esac
+}
+#####################################
+### STATUS 34 (P2PKH)             ###
+#####################################
+S34_P2PKH() {
+  echo "* This is a P2PKH script in an unsigned raw transaction"
+}
 ##########################################################################
 ### AND HERE WE GO ...                                                 ###
 ##########################################################################
@@ -608,6 +683,9 @@ fi
           ;;
       49) echo "   $cur_opcode: OP_DATA_0x49"
 	  S21_SIG_LEN_0x49
+          ;;
+      76) echo "   $cur_opcode: OP_DATA_0x76"
+	  S30_OP_DUP
           ;;
       *)  echo "   $cur_opcode: unknown OpCode"
           ;;

@@ -39,5 +39,13 @@ date    by    file                   comment
 16jun18 svn   trx_in_sig_script.sh   adopted to fit parameter handling for base58check_enc.sh
 16jun19 svn   trx2txt.sh             fixing "var_int" or "compact size integers
 
-
+16jun20 svn   trx2txt.sh             work on integrating unsigned raw transactions 
+16jun21 svn   trx2txt.sh             included an awk call (reverse_hex), to reverse hex data 
+16jun21 svn   trx_in_sig_state_machine.graphml - added S30-S34 for unsigned raw trx data   
+16jun25 svn   trx_in_sig_script.sh   added proper anming to Sig and pubkey (ECDSA, ASN1-DER and X9.63)
+16jun27 svn   trx2txt.sh             work on integrating signing a raw transaction 
+16jul02 svn   trx2txt.sh             display properly unsigned raw trx
+16jul07 svn   trx2txt.sh             extended parameter handling
+16jul08 svn   trx_create_sign.sh     created new file to properly manage creating/signing trx
+16jul09 svn   trx_key2pem.sh         created file to manage key handling (hex to PEM) for signing
 
