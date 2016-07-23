@@ -1,20 +1,21 @@
 #!/bin/sh
-# convert a raw trx from blockchain.info into the separate parts, as specified by:
+# tool to examine bitcoin transactions
+#
+# Copyright (c) 2015, 2016 Volker Nowarra 
+# Coded in Nov/Dec 2015 following this reference:
+#   https://en.bitcoin.it/wiki/Protocol_specification#tx
 # 
 # included example trx:
 # https://blockchain.info/de/rawtx/
 #  cc8a279b0736e6a2cc20b324acc5aa688b3af7b63bbb002f46f6573c1ad84408?format=hex
 #
-#
-# Copyright (c) 2015, 2016 Volker Nowarra 
-# Complete rewrite of code in Nov/Dec 2015 from following reference:
-#   https://en.bitcoin.it/wiki/Protocol_specification#tx
-# 
+# Version	by	date	comment
+# 0.1		svn	01jun16	initial release
+# 0.2		svn	01jun16	added unsigned raw trx 
 # 
 # Permission to use, copy, modify, and distribute this software for any 
 # purpose with or without fee is hereby granted, provided that the above 
 # copyright notice and this permission notice appear in all copies. 
-# 
 # 
 # THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
 # WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
@@ -34,6 +35,7 @@ RAW_TRX=''
 RAW_TRX_LINK=https://blockchain.info/de/rawtx/cc8a279b0736e6a2cc20b324acc5aa688b3af7b63bbb002f46f6573c1ad84408
 RAW_TRX_LINK2HEX="?format=hex"
 RAW_TRX_DEFAULT=010000000253603b3fdb9d5e10de2172305ff68f4b5227310ba6bd81d4e1bf60c0de6183bc010000006a4730440220128487f04a591c43d7a6556fff9158999b46d6119c1a4d4cf1f5d0ac1dd57a94022061556761e9e1b1e656c0a70aa7b3e83454cd61662df61ebdc31e43196b5e0c10012102b12126a716ce7bbb84703bcfbf0afa80283c75a7304a48cd311a5027efd906c2ffffffff0e52c4701577287b6dd02f422c2a8033fa0b4614f75fa9f0a5c4ab69634b5ba7000000006b483045022100a428348ff55b2b59bc55ddacb1a00f4ecdabe282707ba5185d39fe9cdf05d7f0022074232dae76965b6311cea2d9e5708a0f137f4ea2b0e36d0818450c67c9ba259d0121025f95e8a33556e9d7311fa748e9434b333a4ecfb590c773480a196deab0dedee1ffffffff0290257300000000001976a914fca68658b537382e27a85522d292e1ad9543fe0488ac98381100000000001976a9146af1d17462c6146a8a61217e8648903acd3335f188ac00000000
+USR_TRX=''
 V_INT=0
 VERBOSE=0
 VVERBOSE=0
@@ -43,19 +45,35 @@ VVERBOSE=0
 #################################
 proc_help() {
   echo "  "
-  echo "usage: trx2txt.sh [-h|--help|-r|--rawtrx|-t|--trx|-v|--verbose|-vv] [[raw]trx]"
+  echo "usage: $0 [-h|-r|-t|-u|-v|-vv] [[raw]trx][...]"
   echo "  "
-  echo "convert a raw trx into separate lines, as specified by:"
-  echo "https://en.bitcoin.it/wiki/Protocol_specification#tx"
+  echo "1. examine a raw trx into separate lines, as specified by:"
+  echo "   https://en.bitcoin.it/wiki/Protocol_specification#tx"
+  echo "2. create and/or sign a raw trx"
   echo "  "
-  echo " -h|--help     show this help text"
-  echo " -r|--rawtrx   requires hex data from a raw transaction "
-  echo " -t|--trx      requires a TRANSACTION_ID, and fetch data from blockchain.info"
-  echo " -v|--verbose  display verbose output"
-  echo " -vv           display even more verbose output"
+  echo " -h   show this help text"
+  echo " -r   examine RAW trx (requires hex data as a parameter string)"
+  echo " -t   examine an existing TRX (requires TRANSACTION_ID, to fetch from blockchain.info)"
+  echo " -u   examine UNSIGNED raw transaction (requires hex data as a parameter string)"
+  echo " -v   display verbose output"
+  echo " -vv  display even more verbose output"
   echo "  "
   echo " without parameter, a default transaction will be displayed"
   echo " "
+  echo " "
+  echo "°note: currently limited to 1 prev TRX_ID, with one input, and one output index"
+  echo " "
+}
+
+############################################
+# procedure to check trx length (=64chars) #
+############################################
+check_trx_len() {
+  if [ ${#TRX} -ne 64 ] ; then
+    echo "*** expecting a proper formatted Bitcoin TRANSACTION_ID."
+    echo "    please provide a 64 bytes string (aka 32 hex chars) with '-t'."
+    exit 0
+  fi
 }
 
 #######################################
@@ -76,6 +94,14 @@ vv_output() {
   fi
 }
 
+#################################################
+# procedure to reverse a hex data string        #
+#################################################
+# "s=s substr($0,i,1)" means that substr($0,i,1) is appended to the variable s; s=s+something
+reverse_hex() {
+  echo $1 | awk '{ for(i=length;i!=0;i=i-2)s=s substr($0,i-1,2);}END{print s}'
+} 
+
 ###############################################################
 # procedure to calculate value of var_int or compact size int #
 ###############################################################
@@ -92,25 +118,56 @@ vv_output() {
 # if value =  0xff, offset = offset + 2, length = 16
 proc_var_int() {
   length=2
-  V_INT=$( echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }' )
+  to=$(( $offset + 1 ))
+  # V_INT=$( echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }' )
+  V_INT=$( echo $RAW_TRX | cut -b $offset-$to )
   if [ "$V_INT" == "FD" ] ; then
-    offset=$(($offset + 2 ))
     length=4
-    V_INT=$( echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }' )
-    # echo "FD: V_INT=$V_INT"
+    to=$(( $offset + 3 ))
+    V_INT=$( echo $RAW_TRX | cut -b $offset-$to )
+    offset=$(( $offset + 2 ))
   elif [ "$V_INT" == "FE" ] ; then
-    offset=$(($offset + 2 ))
     length=8
-    V_INT=$( echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }' )
-    # echo "FE: V_INT=$V_INT"
+    to=$(( $offset + 7 ))
+    V_INT=$( echo $RAW_TRX | cut -b $offset-$to )
+    offset=$(( $offset + 2 ))
   elif [ "$V_INT" == "FF" ] ; then
-    offset=$(($offset + 2 ))
     length=16
-    V_INT=$( echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }' )
-    # echo "FF: V_INT=$V_INT"
+    to=$(( $offset + 15 ))
+    V_INT=$( echo $RAW_TRX | cut -b $offset-$to )
+    offset=$(( $offset + 2 ))
+  else
+    offset=$(( $offset + 2 ))
   fi
 }
 
+#################################################
+# procedure to display even more verbose output #
+#################################################
+decode_pkscript() {
+    result=$( sh ./trx_out_pk_script.sh -q $1 )
+    echo "$result"
+    # only decode into bitcoin address, if
+    #   $result=20 hex bytes length (40 chars)
+    #   $result=65 hex bytes length (130 chars)
+    # need to strip off any 2nd param (e.g. like "P2SH") for the length check
+    result=$( echo "$result" | tail -n1 )
+    len=$( echo $result | cut -d " " -f 1 )
+    len=${#len}
+    if [ $len -eq 130 ] ; then
+      echo "and translates base58 encoded into this bitcoin address:"
+      echo "sh ./trx_base58check_enc.sh -q -p1 $result"
+      sh ./trx_base58check_enc.sh -q -p1 $result
+    fi
+    if [ $len -eq 66 ] ; then
+      echo "and translates base58 encoded into this bitcoin address:"
+      sh ./trx_base58check_enc.sh -q -p3 $result
+    fi
+    if [ $len -eq 40 ] ; then
+      echo "and translates base58 encoded into this bitcoin address:"
+      sh ./trx_base58check_enc.sh -q -p3 $result
+    fi
+}
 
 echo "#################################################################"
 echo "### trx2txt.sh: script to de-serialize/decode a Bitcoin trx   ###"
@@ -131,13 +188,13 @@ else
   while [ $# -ge 1 ] 
    do
     case "$1" in
-      -h | --help)
+      -h)
          proc_help
          exit 0
          ;;
-      -r | --rawtrx)
-         if [ "$TRX" ] ; then
-           echo "*** you cannot use -t and -r at the same time!"
+      -r)
+         if [ "$TRX" ] || [ "$USR_TRX" ] ; then
+           echo "*** you cannot use -r with any of -t|-u at the same time!"
            echo " "
            exit 0
          fi
@@ -150,9 +207,9 @@ else
          fi
          shift 
          ;;
-      -t | --trx)
-         if [ "$RAW_TRX" ] ; then
-           echo "*** you cannot use -r and -t at the same time!"
+      -t)
+         if [ "$RAW_TRX" ] || [ "$USR_TRX" ] ; then
+           echo "*** you cannot use -t with any of -r|-u at the same time!"
            echo " "
            exit 0
          fi
@@ -163,14 +220,26 @@ else
            TRX=$2
            shift 
          fi
-         if [ ${#TRX} -ne 64 ] ; then
-           echo "*** expecting a proper formatted Bitcoin TRANSACTION_ID."
-           echo "    please provide a 64 bytes string (aka 32 hex chars) with '-t'."
+         check_trx_len
+         shift 
+         ;;
+      -u)
+         if [ "$RAW_TRX" ] || [ "$TRX" ] ; then
+           echo "*** you cannot use -u with any of -r|-t at the same time!"
+           echo " "
            exit 0
+         fi
+         if [ "$2" == ""  ] ; then
+           echo "*** you must provide an unsigned raw transaction to the -u parameter!"
+           exit 0
+         else
+           USR_TRX=1  
+           RAW_TRX=$2 
+           shift 
          fi
          shift 
          ;;
-      -v | --verbose)
+      -v)
          VERBOSE=1
          echo "VERBOSE output turned on"
          if [ "$2" == ""  ] ; then
@@ -246,7 +315,17 @@ else
   exit 0
 fi
 
-vv_output "d.) dc ?"
+vv_output "d.) tr ?"
+which tr > /dev/null
+if [ $? -eq 0 ]; then
+  vv_output "    yes" 
+else
+  echo "*** tr not found, please install tr."
+  echo "exiting gracefully ..." 
+  exit 0
+fi
+
+vv_output "e.) dc ?"
 which dc > /dev/null
 if [ $? -eq 0 ]; then
   vv_output "    yes" 
@@ -255,7 +334,7 @@ else
   echo "the tool can be used, but the option '-vv' will not work."
 fi
 
-vv_output "e.) sed ?"
+vv_output "f.) sed ?"
 which sed > /dev/null
 if [ $? -eq 0 ]; then
   vv_output "    yes" 
@@ -322,80 +401,84 @@ echo "###################"
 
 
 ##############################################################################
-### VERSION
-### Transaction data format version
+### STEP 1 - VERSION (8 chars) - Transaction data format version           ###
+##############################################################################
 ### Size Data type 
 ###  4   uint32_t 
-##############################################################################
 if [ "$VERBOSE" -eq 1 ] ; then
   echo " "
   echo "### VERSION"
 fi
-length=8
 offset=1
-echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }'
-offset=$(($offset + $length))
+to=$(( $offset + 7 ))
+# echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }'
+echo $RAW_TRX | cut -b $offset-$to 
+offset=$(( $offset + 8 ))
  
 ##############################################################################
-### TX_IN COUNT 
-### Number of Transaction inputs
+### STEP 2 - TX_IN COUNT, Number of Inputs (var_int)                       ###
+##############################################################################
 ### Size Data type 
 ###  1+  var_int   
-##############################################################################
 if [ "$VERBOSE" -eq 1 ] ; then
   echo " "
   echo "### TX_IN COUNT [var_int]"
 fi
 proc_var_int
 tx_in_count_hex=$V_INT
-tx_in_count_dez=$( echo "ibase=16; $tx_in_count_hex"|bc) 
+tx_in_count_dec=$( echo "ibase=16; $tx_in_count_hex"|bc) 
 if [ "$VERBOSE" -eq 1 ] ; then
-  echo "hex=$tx_in_count_hex, dez=$tx_in_count_dez"
+  echo "hex=$tx_in_count_hex, dez=$tx_in_count_dec"
 else
   echo $tx_in_count_hex
 fi
-offset=$(($offset + $length))
 
-while [ $LOOPCOUNTER -lt $tx_in_count_dez ]
-do
+while [ $LOOPCOUNTER -lt $tx_in_count_dec ]
+ do
   ##############################################################################
-  ### TX_IN 
-  ### A list of 1 or more transaction inputs or sources for coins
+  ### TX_IN, a data structure of one or more transaction inputs (var_int)    ###
+  ##############################################################################
   ### Size Data type 
   ### 41+  tx_in[]   
-  ##############################################################################
   if [ "$VERBOSE" -eq 1 ] ; then
     echo " "
     echo "### TX_IN[$LOOPCOUNTER]"
   fi
-  # txin consists of the following fields:
+  # TX_IN consists of the following fields:
   # Size Description       Data type Comments
-  # 36   previous_output   outpoint  The previous output trx reference, as an OutPoint structure
-  # 1+   script length     var_int   The length of the signature script
-  # ?    signature script  uchar[]   Script for confirming transaction authorization
-  # 4    sequence          uint32_t  Transaction version as defined by the sender. 
-  #                                  Intended for "replacement" of transactions when information 
+  # 36   previous_output   outpoint, the previous output trx reference
+  #      OutPoint structure: (The first output is 0, etc.)
+  #      32   hash         char[32]  the hash of the referenced transaction (reversed).
+  #       4   index        uint32_t  the index of the specific output in the transaction. 
+  # 1+   script length     var_int   the length of the signature script
+  # ?    signature script  uchar[]   script for confirming transaction authorization
+  # 4    sequence          uint32_t  transaction version as defined by the sender. 
+  #                                  intended for "replacement" of transactions when information 
   #                                  is updated before inclusion into a block. 
-  #
-  # The OutPoint structure consists of the following fields:
-  # Size Descr. Data type Comments
-  # 32   hash   char[32] 	The hash of the referenced transaction.
-  # 4    index  uint32_t 	The index of the specific output in the transaction. 
-  #                       The first output is 0, etc. 
   if [ "$VERBOSE" -eq 1 ] ; then
     echo "###   OutPoint hash[$LOOPCOUNTER] (char[32])"
   fi
-  length=64
-  echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }'
-  offset=$(($offset + $length))
+  ##############################################################################
+  ### STEP 3 - TX_IN, previous output transaction hash: 32hex = 64 chars     ###
+  ##############################################################################
+  to=$(( $offset + 63 ))
+  prev_trx=$( echo $RAW_TRX | cut -b $offset-$to )
+  # prev_trx=$( echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }' )
+  prev_trx=$( reverse_hex $prev_trx )
+  echo $prev_trx
+  offset=$(( $offset + 64 ))
   
   if [ "$VERBOSE" -eq 1 ] ; then
     echo "###   OutPoint index[$LOOPCOUNTER] (uint32_t)"
   fi
-  length=8
-  echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }'
-  offset=$(($offset + $length))
+  # previous output index: 4hex = 8 chars
+  to=$(( $offset + 7 ))
+  echo $RAW_TRX | cut -b $offset-$to 
+  offset=$(( $offset + 8 ))
   
+  ##############################################################################
+  ### STEP 4 - TX_IN, script length is var_int, 1-4 hex chars ...            ###
+  ##############################################################################
   proc_var_int
   script_length_hex=$V_INT
   script_length_dez=$( echo "ibase=16; $script_length_hex"|bc) 
@@ -405,33 +488,48 @@ do
   else
     echo $script_length_hex
   fi
-  offset=$(($offset + $length))
   length=$(($script_length_dez * 2 ))
 
   if [ "$VERBOSE" -eq 1 ] ; then
     echo "###   Script Sig[$LOOPCOUNTER] (uchar[])"
   fi
-  sig_script=$(echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }' )
+  ##############################################################################
+  ### STEP 5 - TX_IN, signature script, first hex Byte is length (2 chars)   ###
+  ##############################################################################
+  # For unsigned raw transactions, this is temporarily filled with the scriptPubKey 
+  # of the output. First a one-byte varint which denotes the length of the scriptSig 
+  to=$(( $offset + $length - 1 ))
+  sig_script=$( echo $RAW_TRX | cut -b $offset-$to )
   echo $sig_script 
-  if [ "$VVERBOSE" -eq 1 ]  && [ $length -ne 0 ] ; then
-    # echo $sig_script | $awk_cmd -f trx_in_sig_script.awk
-    ./trx_in_sig_script.sh -q $sig_script 
-    echo " "
+
+  ##############################################################################
+  ### STEP 6 - TX_IN, signature script, uchar[] - variable length            ###
+  ##############################################################################
+  if [ "$VVERBOSE" -eq 1 ] && [ "$length" -ne 0 ] ; then
+    if [ "$USR_TRX" != "" ] ; then
+      echo "This is USR_TRX, special code required - tbd"
+      decode_pkscript $sig_script
+    else
+      ./trx_in_sig_script.sh -q $sig_script 
+      echo " "
+    fi
   fi
-  offset=$(($offset + $length))
- 
-  if [ "$VERBOSE" -eq 1 ] ; then
-    echo "###   Sequence[$LOOPCOUNTER] (uint32_t)"
-  fi
-  length=8
-  echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }'
-  offset=$(($offset + $length))
+  offset=$(( $offset + $length ))
+  v_output "###   Sequence[$LOOPCOUNTER] (uint32_t)"
+  ##############################################################################
+  ### STEP 7 - TX_IN, SEQUENCE: This is currently always set to 0xffffffff   ###
+  ##############################################################################
+  to=$(( $offset + 7 ))
+  echo $RAW_TRX | cut -b $offset-$to 
+  # echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }'
+  offset=$(( $offset + 8 ))
 
   LOOPCOUNTER=$(($LOOPCOUNTER + 1))
 done
 
 ##############################################################################
-### TX_OUT COUNT 
+### STEP 8 - TX_OUT, Number of Transaction outputs (var_int)               ###
+##############################################################################
 ### Number of Transaction outputs
 ### Size Data type
 ###  1+  var_int   
@@ -440,61 +538,43 @@ done
 ### "Tell me x and y where hash(x) = <bitcoin adr> and y is a valid signature for x". 
 ### To spend the UTXO, one needs to provide x and y satisfying the script, a feat 
 ### practically impossible without a corresponding private key. 
-##############################################################################
+
 if [ "$VERBOSE" -eq 1 ] ; then
   echo " "
   echo "### TX_OUT COUNT"
 fi
-length=2
-# tx_out_count_hex=$( echo ${RAW_TRX:offset:length} )
-tx_out_count_hex=$( echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }' )
-tx_out_count_dez=$( echo "ibase=16; $tx_out_count_hex"|bc) 
+proc_var_int
+tx_out_count_dez=$( echo "ibase=16; $V_INT"|bc) 
 if [ "$VERBOSE" -eq 1 ] ; then
-  echo "hex=$tx_out_count_hex, dez=$tx_out_count_dez"
+  echo "hex=$V_INT, dez=$tx_out_count_dez"
 else
-  echo $tx_out_count_hex
+  echo $V_INT
 fi
-offset=$(($offset + $length))
+# offset=$(( $offset + 2 ))
 
 LOOPCOUNTER=0
 while [ $LOOPCOUNTER -lt $tx_out_count_dez ]
 do
   ##############################################################################
-  ### TX_OUT
-  ### A list of 1 or more transaction outputs or destinations for coins
-  ### Size Data type
-  ###  8+  tx_out[]  
+  ### TX_OUT, a data structure of 1 or more transaction outputs or destinations 
   ##############################################################################
+  ### Size Description      Data type  Comments
+  ###  8   value 	          uint64_t   Transaction Value
+  ###  1+  pk_script length var_int    Length of the pk_script
+  ###  ?   pk_script        uchar[]    Usually contains the public key as a Bitcoin 
+  ###                                  script setting up conditions to claim this output. 
   if [ "$VERBOSE" -eq 1 ] ; then
     echo " "
     echo "### TX_OUT[$LOOPCOUNTER]"
   fi
 
-  # The TxOut structure consists of the following fields:
-  # Size Description      Data type  Comments
-  #  8   value 	          uint64_t   Transaction Value
-  #  1+  pk_script length var_int    Length of the pk_script
-  #  ?   pk_script        uchar[]    Usually contains the public key as a Bitcoin 
-  #                                  script setting up conditions to claim this output. 
-
-  length=16
-  trx_value_hex=$( echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }' )
-
-  # reverse the trx value (hex) string, so BC can eat it to convert to dez value
-  #
-  # for some reason a loop in a while loop crashes my ksh, 
-  # so have to do "manual loops" :-)
-  #
-  reverse=""
-  reverse=$reverse$( echo $trx_value_hex | awk '{ print substr($0, 15, 2) }' )
-  reverse=$reverse$( echo $trx_value_hex | awk '{ print substr($0, 13, 2) }' )
-  reverse=$reverse$( echo $trx_value_hex | awk '{ print substr($0, 11, 2) }' )
-  reverse=$reverse$( echo $trx_value_hex | awk '{ print substr($0, 9, 2) }' )
-  reverse=$reverse$( echo $trx_value_hex | awk '{ print substr($0, 7, 2) }' )
-  reverse=$reverse$( echo $trx_value_hex | awk '{ print substr($0, 5, 2) }' )
-  reverse=$reverse$( echo $trx_value_hex | awk '{ print substr($0, 3, 2) }' )
-  reverse=$reverse$( echo $trx_value_hex | awk '{ print substr($0, 1, 2) }' )
-  echo "$reverse"
+  ##############################################################################
+  ### STEP 9 - TX_OUT, AMOUNT: a 4 bytes hex (8 chars) for the amount        ###
+  ##############################################################################
+  to=$(( $offset + 15 ))
+  trx_value_hex=$( echo $RAW_TRX | cut -b $offset-$to )
+  # trx_value_hex=$( echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }' )
+  reverse=$( reverse_hex $trx_value_hex )
 
   trx_value_dez=$(echo "ibase=16; $reverse"|bc) 
   # try to get it in bitcoin notation
@@ -510,8 +590,11 @@ do
   else
     echo $trx_value_hex
   fi
-  offset=$(($offset + $length))
+  offset=$(($offset + 16 ))
 
+  ##############################################################################
+  ### STEP 10 - TX_OUT, LENGTH: Number of bytes in the PK script (var_int)   ###
+  ##############################################################################
   proc_var_int
   pk_script_length_hex=$V_INT
   pk_script_length_dez=$( echo "ibase=16; $pk_script_length_hex"|bc) 
@@ -521,49 +604,30 @@ do
   else
     echo $pk_script_length_hex
   fi
-  offset=$(($offset + $length))
 
+  ##############################################################################
+  ### STEP 11 - TX_OUT, PUBLIC KEY SCRIPT: the OP Codes of the PK script     ###
+  ##############################################################################
   if [ "$VERBOSE" -eq 1 ] ; then
     echo "###   pk_script[$LOOPCOUNTER] (uchar[])"
   fi
   length=$(($pk_script_length_dez * 2 ))
-  pk_script=$(echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }' )
+  to=$(( $offset + $length - 1 ))
+  pk_script=$(echo $RAW_TRX | cut -b $offset-$to )
   echo $pk_script
 
   if [ "$VVERBOSE" -eq 1 ] && [ $pk_script_length_dez -ne 0 ] ; then
-    result=$( sh ./trx_out_pk_script.sh -q $pk_script )
-    echo "$result"
-    # only decode into bitcoin address, if
-    #   $result=20 hex bytes length (40 chars)
-    #   $result=65 hex bytes length (130 chars)
-    # need to strip off any 2nd param (e.g. like "P2SH") for the length check
-    result=$( echo "$result" | tail -n1 )
-    len=$( echo $result | cut -d " " -f 1 )
-    len=${#len}
-    if [ $len -eq 130 ] ; then
-      echo "and translates base58 encoded into this bitcoin address:"
-      echo "sh ./base58check_enc.sh -q -p1 $result"
-      sh ./base58check_enc.sh -q -p1 $result
-    fi
-    if [ $len -eq 66 ] ; then
-      echo "and translates base58 encoded into this bitcoin address:"
-      sh ./base58check_enc.sh -q -p3 $result
-    fi
-    if [ $len -eq 40 ] ; then
-      echo "and translates base58 encoded into this bitcoin address:"
-      sh ./base58check_enc.sh -q -p3 $result
-    fi
+    decode_pkscript $pk_script
   fi
   offset=$(($offset + $length))
   LOOPCOUNTER=$(($LOOPCOUNTER + 1))
 done
 
 ##############################################################################
-### LOCK_TIME
-### The block number or timestamp at which this transaction is locked:
+### STEP 12 - LOCK_TIME: block n° or timestamp at which this trx is locked ###
+##############################################################################
 ### Size Data type 
 ###  4   uint32_t  
-##############################################################################
 ###      Value        Description
 ###      0            Always locked
 ###      < 500000000  Block number at which this transaction is locked
@@ -577,9 +641,9 @@ if [ "$VERBOSE" -eq 1 ] ; then
   echo " "
   echo "### LOCK_TIME"
 fi
-length=8
-# echo ${RAW_TRX:offset:length} 
-echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }' 
+to=$(( $offset + 7 ))
+echo $RAW_TRX | cut -b $offset-$to 
+# echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }' 
 
 ################################
 ### and here we are done :-) ### 

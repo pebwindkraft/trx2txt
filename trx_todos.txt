@@ -6,6 +6,64 @@ I1: 16jun16 svn:
 ==================
 Testcase 7 does not recognize trx as P2SH, addresses are displayed wrong.
 
+I2: 28jun16 svn:
+==================
+verify in all scripts possible replacement of AWK calls (use cut -b x-y instead?)
+
+I3: 30jun16 svn:
+==================
+trx2txt.sh: 
+a.) need to properly verify unsigned raw trx - no code yet ...
+b.) need to create testcases
+
+I4: 30jun16 svn:
+==================
+trx_key2pem.sh: if wifc key provided, then accept only compressed pub keys.
+
+I5: 30jun16 svn:
+==================
+trx_create_sign.sh: beautify code, remove unnecessary stuff, and do two things:
+a.) strict DER verification in STEP 16
+b.) verify that r or s is not bigger than N/2, also STEP 16
+c.) prepare test cases for these addresses (STEP 11, leading zeros/chksum)
+# 16UwLL9Risc3QfPqBUvKofHmBQ7wMtjvM
+# 10966776006953D5567439E5E39F86A0D273BEED61967F6
+# 12GTF5ARSrqJ2kZd4C9XyGPesoVgP5qCdM
+# 112ZbzFcSpcCoY2EfPNmgxFmv4tVuLSoB4
+
+I6: 30jun16 svn:
+==================
+not all programs require awk/tr/bc/sed - clean up required. 
+
+I7: 03Jul2016 svn:
+==================
+trx2txt.sh - Multisig does not work (yet). Example:
+./trx2txt.sh -vv -r 0100000001bfd27404f34449a53c6a5d0a4b972342e0193441dbfb66c8b5f7806d3bb3497600000000db00483045022100bb9ef133361524477c4811b73f7b5093108f646d260dfdd066ea3a06589cf47f02206b91c5bfb091784b2dc62a71477d5e73a53c3019b6e0b61a4888f24c991e930a0148304502210084470f4972aab95892e6871168fa0d8456a7e4f55cfc8786a5ffef289d9d312602206d048d4fa39fd987235ad025c0e2d30ff4d6e7ab60ed5fb899952a3ef888cbf4014752210287f9169e265380a87cfd717ec543683f572db8b5a6d06231ff59c43429063ae4210343947d178f20b8267488e488442650c27e1e9956c824077f646d6ce13a285d8452aeffffffff0100f2052a010000001976a914249604bc668da89a7d2d494b89fba47f529c52f788ac00000000
+
+I8: 04jul16 svn:
+==================
+trx_create_sign.sh: parameter handling incorrect. 
+when doing "./trx_create_sign.sh -s -u -w -p", the help message should appear 
+
+I9: 14jul16 svn:
+==================
+trx_create_sign.sh: base58decoding: need to extract beginning "1"s and count them...
+#maybe like this:  /^(1*)/
+The logic is described below, at the end - need to verify...
+
+I10: 18jul16 svn:
+==================
+testcaes_trx2txt.sh: testcase 9 fails on OpenBSD, cause parameter buffer is only 2048 Bytes
+
+I11: 21jul16, svn:
+==================
+verify these priv/pubkey combinations:
+Public Key:1EXLETbRDmwsB4gJimQhprvktZDXLkoDWT
+Private Key:5KPgmne3z4vo8uPwKHDF6gZbDJpiXALLY9fipEuKtMLH9pbdbi7
+
+Public Key:1AxTsiWDsMu3ijy2s3NTF6kk1zJRUGjNyh
+Private Key:5KEcUhqeSP4WAvaRRytXD3ChcnLUheaUX5yVLen244q8wHtGmxR
+
 
 #####################################
 ### Extensions / new Requirements ###
@@ -14,9 +72,109 @@ E1:
 ===============
 can it be extended for usage in testnet?
 
-E2: 
-===============
-exted it into a possibility to create raw transactions?
-very long way ... well, actually not really :-)
-raw_trx are described in the dev examples, and not far away from current code. 
+
+
+
+
+########################################
+### Some explanations on leading zeros #
+########################################
+
+1. Convert each leading "one" to a single byte of value 0
+2. Convert the remaining digits from base58 to hex
+3. The result should be exactly 25 bytes long, if not you have an invalid address.
+4. Make sure that the leading byte is either a value of 0 or a value of 5, if not you have an invalid address.
+5. Remove the trailing 4 bytes, leaving you with a 21 byte hex value.
+6. Calculate SHA256(SHA256()) on the 21 bytes.
+7. Make sure the first 4 bytes of step 6 are equal to the 4 bytes removed in step 5, if not you have an invalid address.
+8. If you get this far without determining that the address is invalid, then the address is valid.
+
+(programmatically, you may find it easier to reverse the order of the first two steps)
+
+
+
+Lets walk through the steps and see what happens:
+
+Starting with an RIPEMD-160 hash of 20 bytes that are all 0's...
+0000000000000000000000000000000000000000
+
+Add a version byte in front (in the case of a P2PKH address, that would be a byte with value 0).
+
+000000000000000000000000000000000000000000
+
+Now we have 21 bytes that are all 0's.
+
+Calculate a checksum on this value:
+
+Code:
+
+SHA256(SHA256(000000000000000000000000000000000000000000)) = 
+94a00911c4da27f9271727ffa7a14d8d5588fc0fff9964340ec4065f387e622b
+
+
+Append the first 4 bytes (8 characters) of the checksum to the RIPEMD-160 hash with version byte:
+00000000000000000000000000000000000000000094a00911
+
+Temporarily ignore leading zero bytes:
+94a00911
+
+Convert the value from hex to base58:
+0x94a00911 =
+4oLvT2 (base 58)
+
+Each LEADING 00 BYTE is replaced with a single 1:
+Code:
+
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ 1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+
+
+Concatenate 21 ones with 6 base58 digits:
+1111111111111111111114oLvT2
+
+21 "ones" plus 6 base58 digits = 27 characters
+
+
+Now lets try the same with 19 zeros and a bytes with value 1...
+
+0000000000000000000000000000000000000001
+
+Add a version byte in front (in the case of a P2PKH address, that would be a byte with value 0).
+
+000000000000000000000000000000000000000001
+
+Now we have 20 bytes that are all 0's, followed by a byte that is represented in hex as "01"
+
+Calculate a checksum on this value:
+
+Code:
+
+SHA256(SHA256(000000000000000000000000000000000000000001)) = 
+9d35b5b9d5befcf2d6b89994f7f64279b0645d5d4a5f1a6fa2dcc615bbed04ef
+
+
+Append the first 4 bytes (8 characters) of the checksum to the RIPEMD-160 hash with version byte:
+0000000000000000000000000000000000000000019d35b5b9
+
+Temporarily ignore leading zero bytes:
+019d35b5b9
+
+Convert the value from hex to base58:
+0x019d35b5b9 =
+BZbvjr (base 58)
+
+Each LEADING 00 BYTE is replaced with a single 1:
+Code:
+
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ 1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+
+
+Concatenate 20 ones with 6 base58 digits:
+111111111111111111111BZbvjr
+
+20 "ones" plus 6 base58 digits = 26 characters
+
+(notice that the number of leading 0 bytes was decreased by 1 because the last byte was now a 01, however the number of base58 digits didn't increase since both 0x94a00911 and 0x019d35b5b9 can be represented with 6 base58 digits (4oLvT2 and BZbvjr respectively).
+
 
