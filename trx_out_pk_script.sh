@@ -11,6 +11,15 @@
 #   https://en.bitcoin.it/wiki/Protocol_specification#tx
 #   https://en.bitcoin.it/wiki/Script
 # 
+#  As of Bitcoin Core 0.10, these are considered standard scripts:
+# 
+#   P2PKH (pay-to-public-key-hash)
+#   P2SH (pay-to-script-hash)
+#   P2PK (pay-to-public-key)
+#   Multisignature
+#   OP_RETURN metadata
+# 
+# 
 # Permission to use, copy, modify, and distribute this software for any 
 # purpose with or without fee is hereby granted, provided that the above 
 # copyright notice and this permission notice appear in all copies. 

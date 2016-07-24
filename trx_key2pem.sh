@@ -405,22 +405,36 @@ fi
 v_output " "
 v_output "### Verify, if priv and pub key match"
 pubkey_char=$( echo $pubkey | cut -b 1,2 )
-if [ "$pubkey_char" == "02" ] || [ "$pubkey_char" == "03" ] ; then
-  if [ "${#wif_privkey}" -eq 51 ] ; then
-    echo "  *** UNCOMPRESSED wif privkeys require also compressed pubkeys."
+
+if [ "${#hex_privkey}" -eq 64 ] ; then
+  if [ "$pubkey_char" == "04" ] ; then
+    pre_string=$pre_string_uc
+    mid_string=$mid_string_uc
+  else
+    pre_string=$pre_string_c
+    mid_string=$mid_string_c
+  fi
+fi 
+
+if [ "${#wif_privkey}" -eq 51 ] ; then
+  if [ "$pubkey_char" == "04" ] ; then
+    pre_string=$pre_string_uc
+    mid_string=$mid_string_uc
+  else
+    echo "  *** UNCOMPRESSED wif privkeys require uncompressed pubkeys."
     echo "      Exiting gracefully..."
     exit 1
   fi
-  pre_string=$pre_string_c
-  mid_string=$mid_string_c
-else
-  if [ "${#wif_privkey}" -eq 52 ] ; then
-    echo "  *** COMPRESSED wif privkeys require also compressed pubkeys."
+fi 
+if [ "${#wif_privkey}" -eq 52 ] ; then
+  if [ "$pubkey_char" == "02" ] || [ "$pubkey_char" == "03" ] ; then
+    pre_string=$pre_string_c
+    mid_string=$mid_string_c
+  else
+    echo "  *** COMPRESSED wif privkeys require compressed pubkeys."
     echo "      Exiting gracefully..."
     exit 1
   fi
-  pre_string=$pre_string_uc
-  mid_string=$mid_string_uc
 fi 
 v_output "  yes... "
 

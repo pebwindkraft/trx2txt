@@ -54,7 +54,7 @@ echo "###  first get the checksums of all necessary files       ###" >> $logfile
 echo "#############################################################" >> $logfile
 
 echo "TESTCASE 1a: $chksum_cmd trx_key2pem.sh" | tee -a $logfile
-chksum_ref="87a0290da12165edccb7deb4f9809034fbe63729551612f830babfc0222295e2"
+chksum_ref="56a38f616f94edd8c6c10360fa05466ec0265b6ef5746c5f1e35d622bace967e"
 cp trx_key2pem.sh tmpfile
 chksum_prep
 
@@ -121,7 +121,7 @@ if [ $LOG -eq 1 ] ; then
   echo "This call should fail, cause param -p does not match wif format" | tee -a $logfile
   echo " " | tee -a $logfile
 fi
-chksum_ref="b4aa13fc9f4883358eb3d6243ceb7af58e51c4513e0589b261d4558bdb5f2441"
+chksum_ref="31fb1bccf5181bee93c7b66b47eb4511ec095d8860d63a1db9a00d01e59b73a3"
 ./trx_key2pem.sh -w 5J1F7GHadZG3sCCKHCwg8Jvys9xUbFsjLnGec4H125Ny1V9nR6V -p 0250863AD64A87AE8A2FE83C1AF1A8403CB53F53E486D8511DAD8A04887E5B2352 > tmpfile
 chksum_prep
 
@@ -131,7 +131,7 @@ if [ $LOG -eq 1 ] ; then
   echo "This call should fail, cause param -p does not match wif-c format" | tee -a $logfile
   echo " " | tee -a $logfile
 fi
-chksum_ref="9228892da7f1eab51de6048cd17d55034700959e274e0687bc040e5576c5e817"
+chksum_ref="6d7a590de3d9e805f5223be569d8abb79112dd821181a69190d0cd526f8cc47e"
 ./trx_key2pem.sh -w Kx45GeUBSMPReYQwgXiKhG9FzNXrnCeutJp4yjTd5kKxCitadm3C -p 0450863ad64a87ae8a2fe83c1af1a8403cb53f53e486d8511dad8a04887e5b23522cd470243453a299fa9e77237716103abc11a1df38855ed6f2ee187e9c582ba6 > tmpfile
 chksum_prep
 

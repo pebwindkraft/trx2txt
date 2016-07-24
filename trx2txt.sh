@@ -61,7 +61,7 @@ proc_help() {
   echo " without parameter, a default transaction will be displayed"
   echo " "
   echo " "
-  echo "Â°note: currently limited to 1 prev TRX_ID, with one input, and one output index"
+  echo "°note: currently limited to 1 prev TRX_ID, with one input, and one output index"
   echo " "
 }
 
@@ -119,7 +119,6 @@ reverse_hex() {
 proc_var_int() {
   length=2
   to=$(( $offset + 1 ))
-  #Â V_INT=$( echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }' )
   V_INT=$( echo $RAW_TRX | cut -b $offset-$to )
   if [ "$V_INT" == "FD" ] ; then
     length=4
@@ -411,7 +410,6 @@ if [ "$VERBOSE" -eq 1 ] ; then
 fi
 offset=1
 to=$(( $offset + 7 ))
-# echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }'
 echo $RAW_TRX | cut -b $offset-$to 
 offset=$(( $offset + 8 ))
  
@@ -463,7 +461,6 @@ while [ $LOOPCOUNTER -lt $tx_in_count_dec ]
   ##############################################################################
   to=$(( $offset + 63 ))
   prev_trx=$( echo $RAW_TRX | cut -b $offset-$to )
-  # prev_trx=$( echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }' )
   prev_trx=$( reverse_hex $prev_trx )
   echo $prev_trx
   offset=$(( $offset + 64 ))
@@ -521,7 +518,6 @@ while [ $LOOPCOUNTER -lt $tx_in_count_dec ]
   ##############################################################################
   to=$(( $offset + 7 ))
   echo $RAW_TRX | cut -b $offset-$to 
-  # echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }'
   offset=$(( $offset + 8 ))
 
   LOOPCOUNTER=$(($LOOPCOUNTER + 1))
@@ -573,7 +569,6 @@ do
   ##############################################################################
   to=$(( $offset + 15 ))
   trx_value_hex=$( echo $RAW_TRX | cut -b $offset-$to )
-  # trx_value_hex=$( echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }' )
   reverse=$( reverse_hex $trx_value_hex )
 
   trx_value_dez=$(echo "ibase=16; $reverse"|bc) 
@@ -624,7 +619,7 @@ do
 done
 
 ##############################################################################
-### STEP 12 - LOCK_TIME: block nÂ° or timestamp at which this trx is locked ###
+### STEP 12 - LOCK_TIME: block n° or timestamp at which this trx is locked ###
 ##############################################################################
 ### Size Data type 
 ###  4   uint32_t  
@@ -643,7 +638,6 @@ if [ "$VERBOSE" -eq 1 ] ; then
 fi
 to=$(( $offset + 7 ))
 echo $RAW_TRX | cut -b $offset-$to 
-# echo $RAW_TRX | awk -v off=$offset -v len=$length '{ print substr($0, off, len) }' 
 
 ################################
 ### and here we are done :-) ### 

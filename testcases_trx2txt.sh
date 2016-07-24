@@ -54,12 +54,12 @@ echo "###  first get the checksums of all necessary files           ###" >> $log
 echo "#################################################################" >> $logfile
 
 echo "TESTCASE 1a: $chksum_cmd trx2txt.sh" | tee -a $logfile
-chksum_ref="3dea77b1d4639b4453aaad5af9ff2882778a744383340dbfbf0e62cbbb1cdd91"
+chksum_ref="2d2fd22c33281c6f35b1aac8260d439b846a7416faab51c401f755f2c00fdede"
 cp trx2txt.sh tmpfile
 chksum_prep
 
 echo "TESTCASE 1b: $chksum_cmd trx_in_sig_script.sh" | tee -a $logfile
-chksum_ref="adc6ae182c79c9005d8af46e3369c8f14b57c250b7e99c2fc76c83da14577e0c" 
+chksum_ref="bbadcb3f8c6d32b829053d89d9291011ffafd0de14790d1f06c2b91949ef885e" 
 cp trx_in_sig_script.sh tmpfile
 chksum_prep
 
@@ -86,7 +86,7 @@ echo "###  verify, that code is executing properly                  ###" >> $log
 echo "#################################################################" >> $logfile
 
 echo "TESTCASE 2a: ./trx2txt.sh xyz" | tee -a $logfile
-chksum_ref="904a1337fb7d51ed7bb6d6e7bc63154ae7d14a26d61741011cb02fd846ca4c41" 
+chksum_ref="fe68ed0efb9461b1dac2937b10e3aba1b2a8cbe1299858366eff4d4980a269ee" 
 ./trx2txt.sh xyz > tmpfile
 chksum_prep
 
@@ -111,12 +111,12 @@ chksum_ref="bc63cf89cb676c08f7025e09c81b81ac7c379f37b2f4ac5a7b02bb114a760276"
 chksum_prep
 
 echo "TESTCASE 2f: ./trx2txt.sh -v abc" | tee -a $logfile
-chksum_ref="5cae033926878931166b0156e6b72016cd6acefda1298483700e0ecf53226790" 
+chksum_ref="e8cf61e4408448c46e8c603327274744cf99eb1489fee4f9814c21ce38dbf09d" 
 ./trx2txt.sh -v abc > tmpfile
 chksum_prep
  
 echo "TESTCASE 2g: ./trx2txt.sh -h" | tee -a $logfile
-chksum_ref="e062f6e0f01c9673ca6727f9b731d4c6a9bc816796227d828d538ba03c911b9b" 
+chksum_ref="d85103a06a16816cb637bd205b8903c43d118ef7bd4e90590f31a81b73d09d7c" 
 ./trx2txt.sh -h > tmpfile
 chksum_prep
 
