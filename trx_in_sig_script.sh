@@ -47,8 +47,8 @@
 #   The S coordinate, as a big-endian integer.
 #
 #  Where initial 0x00 bytes for R and S are not allowed, except when their 
-#  first byte would otherwise be above 0x7F (in which case a single 0x00 in 
-#  front is required). Also note that inside transaction signatures, an 
+#  first byte would otherwise be above 0x7F (in which case a single 0x00 in 
+#  front is required). Also note that inside transaction signatures, an 
 #  extra hashtype byte follows the actual signature data.
 #
 #

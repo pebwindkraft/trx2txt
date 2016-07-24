@@ -381,11 +381,12 @@ vv_output "##########################################"
 vv_output "### Check if necessary tools are there ###"
 vv_output "##########################################"
 check_tool awk
-check_tool openssl
 check_tool bc
+check_tool cut
 check_tool dc
-check_tool tr
+check_tool openssl
 check_tool sed
+check_tool tr
 
 # echo "###################"
 # echo "### so let's go ###"
@@ -502,7 +503,7 @@ if [ "$C_PARAM_FLAG" -eq 1 ] ; then
   ##############################################################################
   v_output "###  4. TX_IN, the output index we want to redeem from"
   # does not work with bash 4 - grrrrrrrr
-  # STEPCODE=$( printf "%08s" $(echo "obase=16;$PREV_TRX_OutPoint"|bc -l) )
+  # STEPCODE=$( printf "%08s" $(echo "obase=16;$PREV_TRX_OutPoint"|bc -l) )
   STEPCODE=$( echo "obase=16;$PREV_TRX_OutPoint"|bc -l)
   STEPCODE=$( zero_pad $STEPCODE 8 )
   STEPCODE=$( reverse_hex $STEPCODE )
@@ -558,7 +559,7 @@ if [ "$C_PARAM_FLAG" -eq 1 ] ; then
   ##############################################################################
   # a 8-byte reversed hex field, e.g.: 3a01000000000000"
   # does not work with bash 4 - grrrrrrrr
-  # STEPCODE=$( printf "%016s" $(echo "obase=16;$AMOUNT"|bc -l) )
+  # STEPCODE=$( printf "%016s" $(echo "obase=16;$AMOUNT"|bc -l) )
   STEPCODE=$(echo "obase=16;$AMOUNT"|bc -l) 
   STEPCODE=$( zero_pad $STEPCODE 16 )
   v_output "###  9. TX_OUT, decimal amount=$AMOUNT, in hex=$STEPCODE"
