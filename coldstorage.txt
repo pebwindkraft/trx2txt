@@ -1,0 +1,119 @@
+call trx_create_sign.sh with the help parameter:
+
+
+$ ./trx_create_sign.sh -h
+######################################################################
+### trx_create_sign.sh: create or sign a raw, unsigned Bitcoin trx ###
+######################################################################
+  
+create usage: ./trx_create_sign.sh [-h|-q|-v|-vv] -c -m|-t <trx_id> <params>
+sign usage:   ./trx_create_sign.sh [-h|-q|-v|-vv] -s -u <raw_trx> -w|-x <privkey> -p <pubkey>
+  
+ -h  show this HELP text
+ -q  real QUIET mode, don't display anything
+ -v  display VERBOSE output
+ -vv display VERY VERBOSE output
+ 
+ -c  CREATE an unsigned, raw trx.
+ -m  MANUALLY provide all <params> (see below)
+     You need to know and provide all parameters as per below
+ -p  public key (UNCOMPRESSED or COMPRESSED) in hex format
+ -t  previous TRANSACTION_ID: fetch trx_id from blockchain.info
+ -u  next param is an unsigned raw transaction
+ -w  next param is a WIF or WIF-C encoded private key (51 or 52 chars)
+ -x  next param is a HEX encoded private key (32Bytes=64chars)
+ 
+ <params> consists of these details (keep the order!):
+  1) <prev output index> : output index from previous TRX_ID
+  2) <prev pubkey script>: only with -m: the PUBKEY SCRIPT from previous TRX_ID
+  3) <amount>            : the amount to spend (decimal, in Satoshi)
+                           *** careful: input - output = trx fee !!!
+  4) <address>           : the target Bitcoin address
+ 
+limited to 1 prev TRX_ID, with one prev output index, and one address
+  
+lorena:/Data/Bitcoin/trx2txt $ 
+
+
+What do we need? There are basically three steps:
+1.) create a raw unsigned transaction on the online computer
+2.) ideally bring the unsigned raw trx to a second PC (cold storag), and sign it there
+3.) The signed raw trx will be brought back to the online PC, and sent to the network.
+
+
+Step 1:
+=======
+A transaction assigns satoshis from a previous transaction and its outputs to a new 
+target address. The previous transaction and output is usually at an address, that 
+you control. 
+In my case, I had some satoshis on 'my' address '1JmPRDELzWZqRBKtdiak3iiyZrPQT3gxcM', for which I have the public keys, so I can froward the satoshis. 
+I wanted to transfer to '12GTF5ARSrqJ2kZd4C9XyGPesoVgP5qCdM'.
+
+I enter 'my' address into blockchain.info or similiar. 
+I then look at the trx ID, which assigned satoshis to this address, which is: 
+   '1de803fe2e3795f7b92d5acc113d3e452939ec003ce83309386ce4213c6812bc'
+I use this view for further detailed info:
+https://blockchain.info/rawtx/1de803fe2e3795f7b92d5acc113d3e452939ec003ce83309386ce4213c6812bc
+This shows me all I need. I wanted to spend the 1100000 satoshis, which is in the 
+output indox [0].
+Below this amount is the pubkey script, that we'll need for the signing process.
+
+ Summary:
+  a) <trx_id>            : 1de803fe2e3795f7b92d5acc113d3e452939ec003ce83309386ce4213c6812bc
+  b) <prev output index> : 0
+  c) <prev pubkey script>: 76a914c2df275d78e506e17691fd6f0c63c43d15c897fc88ac
+  d) <amount>            : 1090000   (careful: input - output = trx fee!)
+  e) <address>           : 12GTF5ARSrqJ2kZd4C9XyGPesoVgP5qCdM
+
+Now it is easy to manually create an unsigned, raw trx via this command:
+./trx_create_sign.sh -v -m <trx_id> <prev output index> <prev pubkey script> <amount> <address>
+
+I would try this:
+
+./trx_create_sign.sh -vv -c -m 1de803fe2e3795f7b92d5acc113d3e452939ec003ce83309386ce4213c6812bc 0
+ 76a914c2df275d78e506e17691fd6f0c63c43d15c897fc88ac 1090000 12GTF5ARSrqJ2kZd4C9XyGPesoVgP5qCdM
+
+and would get this:
+0100000001bc12683c21e46c380933e83c00ec3929453e3d11cc5a2db9f795372efe03e81d000000001976a914c2df275d78e506e17691fd6f0c63c43d15c897fc88acffffffff01d0a11000000000001976a9140de4457d577bb45dee513bb695bdfdc3b34d467d88ac0000000001000000
+
+ can now verify the result with:
+./trx2txt.sh -vv -u 0100000001bc12683c21e46c380933e83c00ec3929453e3d11cc5a2db9f795372efe03e81d000000001976a914c2df275d78e506e17691fd6f0c63c43d15c897fc88acffffffff01d0a11000000000001976a9140de4457d577bb45dee513bb695bdfdc3b34d467d88ac0000000001000000
+
+Now this data is a raw, unsigned trx, and is good to be copied to a USB drive or similiar, and brought to the cold storage system.
+
+
+Step 2:
+=======
+On the cold storage system, the same set of the trx-suite must be installed. We also need to know the private key and the public key. Once again, call the script with the '-h' parameter:
+
+./trx_create_sign.sh [-h|-q|-v|-vv] -s -u <raw_trx> -w|-x <privkey> -p <pubkey>
+
+The unsigned, raw trx on the USB stick is what we need, and somehow the key pair. 
+The private key is usually in your wallet, or you have it generated offline. You can provide it as wif, wif-c or hex key. The public key needs to be in hex, and is usually derived from your private key. I use this site to do so: http://gobittest.appspot.com/Address.
+Then I fill all into my command line, and get a result similiar to this:
+
+
+./trx_create_sign.sh -s -u 0100000001bc12683c21e46c380933e83c00ec3929453e3d11cc5a2db9f795372efe03e81d000000001976a914c2df275d78e506e17691fd6f0c63c43d15c897fc88acffffffff01d0a11000000000001976a9140de4457d577bb45dee513bb695bdfdc3b34d467d88ac0000000001000000 -w XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX -p 03cc5debc62369bd861900b167bc6add5f1a6249bdab4146d5ce698879988dced0
+
+... 
+
+0100000001bc12683c21e46c380933e83c00ec3929453e3d11cc5a2db9f795372efe03e81d000000006A47304402200a39cf61e7a1a25f1a1c5d93c335b19111190445aa02f71239588c3bf2fd0a2502200e927926f9ea40fc25be215cd0469d17cefb9b819de09b556223a93933782a06012103cc5debc62369bd861900b167bc6add5f1a6249bdab4146d5ce698879988dced0ffffffff01d0a11000000000001976a9140de4457d577bb45dee513bb695bdfdc3b34d467d88ac00000000
+
+We double check this result again with 
+
+  $ ./trx2txt.sh -vv -r 0100000001bc12683c21e46c380933e83c ... fdc3b34d467d88ac00000000
+
+This string is the signed transaction, which I bring back (via USB key) to my online computer.
+
+Step 3:
+=======
+Back on the online computer, I cut&paste the signed raw transaction string into this webpage:
+
+https://blockchain.info/de/decode-tx
+
+and if all looks ok, then here:
+https://blockchain.info/pushtx
+
+happy cold storage user :-)
+
+

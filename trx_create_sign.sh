@@ -288,7 +288,16 @@ else
       -u)
          if [ "$2" == ""  ] ; then
            echo "*** you must provide a Bitcoin TRANSACTION_ID to the -u parameter!"
-           exit 0
+           exit 1
+         fi
+         if [ ${#2} -lt 227 ] ; then
+           echo "*** this seems to be an invalid unsigned raw trx as parameter."
+           echo "    An unsigned raw trx is a hex string, consisiting of the"
+           echo "    <trx id>, <prev output index>, <prev pubkey script>, <amount>"
+           echo "    and an <address>. This is min ~225 chars long ..."
+           echo "    Try using the help function ('-h' parameter)."
+           echo "    "
+           exit 1
          fi
          RAW_TRX=$2
          shift

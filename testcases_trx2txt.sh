@@ -47,14 +47,14 @@ to_logfile() {
 
 testcase1() {
 # first get the checksums of all necessary files
-echo "#################################################################" | tee -a $logfile
-echo "### TESTCASE 1:                                               ###" | tee -a $logfile
-echo "#################################################################" | tee -a $logfile
-echo "###  first get the checksums of all necessary files           ###" >> $logfile
-echo "#################################################################" >> $logfile
+echo "#############################################################" | tee -a $logfile
+echo "### TESTCASE 1:                                           ###" | tee -a $logfile
+echo "#############################################################" | tee -a $logfile
+echo "###  first get the checksums of all necessary files       ###" >> $logfile
+echo "#############################################################" >> $logfile
 
 echo "TESTCASE 1a: $chksum_cmd trx2txt.sh" | tee -a $logfile
-chksum_ref="2d2fd22c33281c6f35b1aac8260d439b846a7416faab51c401f755f2c00fdede"
+chksum_ref="fcf59f3d996fe132171d20507eac52f7f7e7625797845c7a8e246b7c4b9e8b9c"
 cp trx2txt.sh tmpfile
 chksum_prep
 
@@ -77,13 +77,13 @@ echo " " | tee -a $logfile
 
 testcase2() {
 # do a testcase with the included example transaction
-echo "#################################################################" | tee -a $logfile
-echo "### TESTCASE 2:                                               ###" | tee -a $logfile
-echo "#################################################################" | tee -a $logfile
-echo "###  do a testcase with the parameters set incorrectly, and   ###" >> $logfile
-echo "###  at the end 3 correct settings. This just serves to       ###" >> $logfile
-echo "###  verify, that code is executing properly                  ###" >> $logfile
-echo "#################################################################" >> $logfile
+echo "#############################################################" | tee -a $logfile
+echo "### TESTCASE 2:                                           ###" | tee -a $logfile
+echo "#############################################################" | tee -a $logfile
+echo "### do a testcase with the parameters set incorrectly,    ###" >> $logfile
+echo "### and at the end 3 correct settings. This just serves   ###" >> $logfile
+echo "### to verify, that code is executing properly            ###" >> $logfile
+echo "#############################################################" >> $logfile
 
 echo "TESTCASE 2a: ./trx2txt.sh xyz" | tee -a $logfile
 chksum_ref="fe68ed0efb9461b1dac2937b10e3aba1b2a8cbe1299858366eff4d4980a269ee" 
@@ -139,13 +139,13 @@ echo " " | tee -a $logfile
 
 testcase3() {
 # this is a fairly simple trx, 1 input, 1 output
-echo "#################################################################" | tee -a $logfile
-echo "### TESTCASE 3:                                               ###" | tee -a $logfile
-echo "#################################################################" | tee -a $logfile
-echo "###  we check functionality to load data via -t parameter     ###" >> $logfile
-echo "###  from https://blockcahin.info ...                         ###" >> $logfile
-echo "###  this is a fairly simple trx, 1 input, 1 output           ###" >> $logfile
-echo "#################################################################" >> $logfile
+echo "#############################################################" | tee -a $logfile
+echo "### TESTCASE 3:                                           ###" | tee -a $logfile
+echo "#############################################################" | tee -a $logfile
+echo "###  we check functionality to load data via -t parameter ###" >> $logfile
+echo "###  from https://blockcahin.info ...                     ###" >> $logfile
+echo "###  this is a fairly simple trx, 1 input, 1 output       ###" >> $logfile
+echo "#############################################################" >> $logfile
 echo "https://blockchain.info/de/rawtx/30375f40adcf361f5b2a5074b615ca75e5696909e8bc2f8e553c69631826fcf6" | tee -a $logfile
 
 echo "TESTCASE 3a: " | tee -a $logfile
@@ -168,11 +168,11 @@ echo " " | tee -a $logfile
 
 testcase4() {
 # this is a fairly simple trx, 1 input, 2 outputs
-echo "#################################################################" | tee -a $logfile
-echo "### TESTCASE 4:                                               ###" | tee -a $logfile
-echo "#################################################################" | tee -a $logfile
-echo "###  this is a fairly simple trx, 1 input, 2 outputs          ###" >> $logfile
-echo "#################################################################" >> $logfile
+echo "#############################################################" | tee -a $logfile
+echo "### TESTCASE 4:                                           ###" | tee -a $logfile
+echo "#############################################################" | tee -a $logfile
+echo "###  this is a fairly simple trx, 1 input, 2 outputs      ###" >> $logfile
+echo "#############################################################" >> $logfile
 echo "https://blockchain.info/de/rawtx/91c91f31b7586b807d0ddc7a1670d10cc34bdef326affc945d4987704c7eed62" | tee -a $logfile
 
 echo "TESTCASE 4a: " | tee -a $logfile
@@ -194,11 +194,11 @@ echo " " | tee -a $logfile
 
 testcase5() {
 # this is a fairly simple trx, 3 inputs, 1 output 
-echo "#################################################################" | tee -a $logfile
-echo "### TESTCASE 5:                                               ###" | tee -a $logfile
-echo "#################################################################" | tee -a $logfile
-echo "###  this is a fairly simple trx, 3 inputs, 1 P2SH output     ###" >> $logfile
-echo "#################################################################" >> $logfile
+echo "#############################################################" | tee -a $logfile
+echo "### TESTCASE 5:                                           ###" | tee -a $logfile
+echo "#############################################################" | tee -a $logfile
+echo "###  this is a fairly simple trx, 3 inputs, 1 P2SH output ###" >> $logfile
+echo "#############################################################" >> $logfile
 echo "https://blockchain.info/de/rawtx/4f292aeff2ad2da37b5d5719bf34846938cf96ea7e75c8715bc3edac01b39589" | tee -a $logfile
 
 echo "TESTCASE 5a: " | tee -a $logfile
@@ -220,12 +220,12 @@ echo " " | tee -a $logfile
 
 testcase6() {
 # this trx has 1 input, and 4 outputs.
-echo "#################################################################" | tee -a $logfile
-echo "### TESTCASE 6:                                               ###" | tee -a $logfile
-echo "#################################################################" | tee -a $logfile
-echo "###  this trx has 1 input, and 4 outputs.                     ###" >> $logfile
-echo "###  trx-in sequence = feffffff - what does this mean?        ###" >> $logfile
-echo "#################################################################" >> $logfile
+echo "#############################################################" | tee -a $logfile
+echo "### TESTCASE 6:                                           ###" | tee -a $logfile
+echo "#############################################################" | tee -a $logfile
+echo "###  this trx has 1 input, and 4 outputs.                 ###" >> $logfile
+echo "###  trx-in sequence = feffffff - what does this mean?    ###" >> $logfile
+echo "#############################################################" >> $logfile
 echo "https://blockchain.info/de/rawtx/7264f8ba4a85a4780c549bf04a98e8de4c9cb1120cb1dfe8ab85ff6832eff864" | tee -a $logfile
 
 echo "TESTCASE 6a: " | tee -a $logfile
@@ -245,104 +245,110 @@ chksum_prep
 echo " " | tee -a $logfile
 }
 
+
 testcase7() {
-# this trx has 1 input, 2 outputs (one is P2SH script)
-echo "#################################################################" | tee -a $logfile
-echo "### TESTCASE 7:                                               ###" | tee -a $logfile
-echo "#################################################################" | tee -a $logfile
-echo "###  blockchain.info shows a single TRX-IN ECDSA Key as a     ###" >> $logfile
-echo "###  PS2H address (3A75K3usH7...). However, there seem to     ###" >> $logfile
-echo "###  be two signatures in the hex code of the script:         ###" >> $logfile
-echo "###      ...                                                  ###" >> $logfile
-echo "###      47: OP_DATA_0x47                                     ###" >> $logfile
-echo "###      52: unknown opcode                                   ###" >> $logfile
-echo "###      21: OP_DATA_0x21                                     ###" >> $logfile
-echo "###      02: OP_INT_0x02                                      ###" >> $logfile
-echo "###          0285CB139A82DD90:62B9AC1091CB1F91                ###" >> $logfile
-echo "###          A01C11AB9C6A46BD:09D0754DAB86A38C                ###" >> $logfile
-echo "###          C9                                               ###" >> $logfile
-echo "###   * This is Public ECDSA Key, corresponding bitcoin ...   ###" >> $logfile
-echo "###   1LcBDzTGSJiN5snVBHiyeWsT7SqRWUW7mp                      ###" >> $logfile
-echo "###      21: OP_DATA_0x21                                     ###" >> $logfile
-echo "###      03: OP_INT_0x03                                      ###" >> $logfile
-echo "###          0328C37F938748DC:BBF15A0E5A9D1BA2                ###" >> $logfile
-echo "###          0F93F2C2D0EAD63C:7C14A5A10959B5CE                ###" >> $logfile
-echo "###          89                                               ###" >> $logfile
-echo "###   * This is Public ECDSA Key, corresponding bitcoin ...   ###" >> $logfile
-echo "###   1LisHErVXWhY1A1ZJqZSDdGYKrbGn1M6bx                      ###" >> $logfile
-echo "###                                                           ###" >> $logfile
-echo "###  trx-in script len seems to be '0xda'. Script then starts ###" >> $logfile
-echo "###  with '00483045...', what does this mean, where is docu ? ###" >> $logfile
-echo "#################################################################" >> $logfile
-echo "https://blockchain.info/de/rawtx/c0889855c93eed67d1f5a6b8a31e446e3327ce03bc267f2db958e79802941c73" | tee -a $logfile
+# this trx has 1 input, and 4 outputs.
+echo "#############################################################" | tee -a $logfile
+echo "### TESTCASE 7:                                           ###" | tee -a $logfile
+echo "#############################################################" | tee -a $logfile
+echo "###  this is a transaction to a multisig address          ###" >> $logfile
+echo "#############################################################" >> $logfile
+echo "https://blockchain.info/de/rawtx/51f7fc9899b068c4a501ffa9b37368fd7c09b3e72e893e989c40c89095f74b79" | tee -a $logfile
 
 echo "TESTCASE 7a: " | tee -a $logfile
+chksum_ref="bde7381bfa673b0d9ea7fab8c5589505a3f4e3fab2f040caa6cc89fb50ab722e"
+./trx2txt.sh -r 010000000216f7342825c156476c430f3e2765e0c393283b08246a66d122a45c836554ef03010000006b483045022100dd55b040174c90e85f0d33417dfccd96fa4f6b5ef50c32a1b720c24efc097f73022018d8a6b003b46c578d42ff4221af46068b64dd4e55d2d074175038a6e620e66b012103a86d6cd289a76d1b2b13d362d9f58d1753dd4252be1ef8a404831dd1de45f6c2ffffffffe18f73b450139de5c7375dcd2bd249ef6a42ad19661104df796dccdc98d34722000000006a47304402202e733dd23eb16130c3aa705cd04ffa31928616f2558063281cf642d786bf3eef022010a4d48968c504391c19c1cf67163d5618809bacb644d797a24a05f2130aa9f7012103a86d6cd289a76d1b2b13d362d9f58d1753dd4252be1ef8a404831dd1de45f6c2ffffffff02a6ea17000000000017a914f815b036d9bbbce5e9f2a00abd1bf3dc91e9551087413c0200000000001976a914ff57cb19528c04096067b8db38d18ecd0b37789388ac00000000 > tmpfile
+chksum_prep
+
+echo "TESTCASE 7b: " | tee -a $logfile
+chksum_ref="66a74954576a5315b3a9f6a4e07dedf335b60194a11e1173a1d0b363444af425"
+./trx2txt.sh -v -r 010000000216f7342825c156476c430f3e2765e0c393283b08246a66d122a45c836554ef03010000006b483045022100dd55b040174c90e85f0d33417dfccd96fa4f6b5ef50c32a1b720c24efc097f73022018d8a6b003b46c578d42ff4221af46068b64dd4e55d2d074175038a6e620e66b012103a86d6cd289a76d1b2b13d362d9f58d1753dd4252be1ef8a404831dd1de45f6c2ffffffffe18f73b450139de5c7375dcd2bd249ef6a42ad19661104df796dccdc98d34722000000006a47304402202e733dd23eb16130c3aa705cd04ffa31928616f2558063281cf642d786bf3eef022010a4d48968c504391c19c1cf67163d5618809bacb644d797a24a05f2130aa9f7012103a86d6cd289a76d1b2b13d362d9f58d1753dd4252be1ef8a404831dd1de45f6c2ffffffff02a6ea17000000000017a914f815b036d9bbbce5e9f2a00abd1bf3dc91e9551087413c0200000000001976a914ff57cb19528c04096067b8db38d18ecd0b37789388ac00000000 > tmpfile
+chksum_prep
+
+echo "TESTCASE 7c: " | tee -a $logfile
+chksum_ref="dd35d3a5e8727507bff832a7ae7da663c94f28c97f1ad2a9bc53edd1ab93d665"
+./trx2txt.sh -vv -r 010000000216f7342825c156476c430f3e2765e0c393283b08246a66d122a45c836554ef03010000006b483045022100dd55b040174c90e85f0d33417dfccd96fa4f6b5ef50c32a1b720c24efc097f73022018d8a6b003b46c578d42ff4221af46068b64dd4e55d2d074175038a6e620e66b012103a86d6cd289a76d1b2b13d362d9f58d1753dd4252be1ef8a404831dd1de45f6c2ffffffffe18f73b450139de5c7375dcd2bd249ef6a42ad19661104df796dccdc98d34722000000006a47304402202e733dd23eb16130c3aa705cd04ffa31928616f2558063281cf642d786bf3eef022010a4d48968c504391c19c1cf67163d5618809bacb644d797a24a05f2130aa9f7012103a86d6cd289a76d1b2b13d362d9f58d1753dd4252be1ef8a404831dd1de45f6c2ffffffff02a6ea17000000000017a914f815b036d9bbbce5e9f2a00abd1bf3dc91e9551087413c0200000000001976a914ff57cb19528c04096067b8db38d18ecd0b37789388ac00000000 > tmpfile
+chksum_prep
+echo " " | tee -a $logfile
+}
+
+
+testcase8() {
+# this trx has 1 input, 2 outputs (one is P2SH script)
+echo "#############################################################" | tee -a $logfile
+echo "### TESTCASE 8:                                           ###" | tee -a $logfile
+echo "#############################################################" | tee -a $logfile
+echo "###  This is just another multisig transaction ...        ###" >> $logfile
+echo "#############################################################" >> $logfile
+echo "https://blockchain.info/de/rawtx/c0889855c93eed67d1f5a6b8a31e446e3327ce03bc267f2db958e79802941c73" | tee -a $logfile
+
+echo "TESTCASE 8a: " | tee -a $logfile
 chksum_ref="6dcd7435e8cde48815d781cfcf6e45d806af38d62e9e6b3348dac1426b25fefb"
 ./trx2txt.sh -r 0100000001b9c6777f2d8d710f1e0e3bb5fbffa7cdfd6c814a2257a7cfced9a2205448dd0601000000da0048304502210083a93c7611f5aeee6b0b4d1cbff2d31556af4cd1f951de8341c768ae03f780730220063b5e6dfb461291b1fbd93d58a8111d04fd03c7098834bac5cdf1d3c5fa90d0014730440220137c7320e03b73da66e9cf89e5f5ed0d5743ebc65e776707b8385ff93039408802202c30bc57010b3dd20507393ebc79affc653473a7baf03c5abf19c14e2136c646014752210285cb139a82dd9062b9ac1091cb1f91a01c11ab9c6a46bd09d0754dab86a38cc9210328c37f938748dcbbf15a0e5a9d1ba20f93f2c2d0ead63c7c14a5a10959b5ce8952aeffffffff0280c42b03000000001976a914d199925b52d367220b1e2a2d8815e635b571512f88ac65a7b3010000000017a9145c4dd14b9df138840b34237fdbe9159c420edbbe8700000000 > tmpfile
 chksum_prep
 
-echo "TESTCASE 7b: " | tee -a $logfile
+echo "TESTCASE 8b: " | tee -a $logfile
 chksum_ref="6a2ad8922f82871647f71a8a3d73024cb511f7dc83975da197317157ebe7d3eb"
 ./trx2txt.sh -v -r 0100000001b9c6777f2d8d710f1e0e3bb5fbffa7cdfd6c814a2257a7cfced9a2205448dd0601000000da0048304502210083a93c7611f5aeee6b0b4d1cbff2d31556af4cd1f951de8341c768ae03f780730220063b5e6dfb461291b1fbd93d58a8111d04fd03c7098834bac5cdf1d3c5fa90d0014730440220137c7320e03b73da66e9cf89e5f5ed0d5743ebc65e776707b8385ff93039408802202c30bc57010b3dd20507393ebc79affc653473a7baf03c5abf19c14e2136c646014752210285cb139a82dd9062b9ac1091cb1f91a01c11ab9c6a46bd09d0754dab86a38cc9210328c37f938748dcbbf15a0e5a9d1ba20f93f2c2d0ead63c7c14a5a10959b5ce8952aeffffffff0280c42b03000000001976a914d199925b52d367220b1e2a2d8815e635b571512f88ac65a7b3010000000017a9145c4dd14b9df138840b34237fdbe9159c420edbbe8700000000 > tmpfile
 chksum_prep
 
-echo "TESTCASE 7c: " | tee -a $logfile
+echo "TESTCASE 8c: " | tee -a $logfile
 chksum_ref="5b12763f44175412486948745d6eaa50f1f1fd79f72a5e7f52d27be486896e68"
 ./trx2txt.sh -vv -r 0100000001b9c6777f2d8d710f1e0e3bb5fbffa7cdfd6c814a2257a7cfced9a2205448dd0601000000da0048304502210083a93c7611f5aeee6b0b4d1cbff2d31556af4cd1f951de8341c768ae03f780730220063b5e6dfb461291b1fbd93d58a8111d04fd03c7098834bac5cdf1d3c5fa90d0014730440220137c7320e03b73da66e9cf89e5f5ed0d5743ebc65e776707b8385ff93039408802202c30bc57010b3dd20507393ebc79affc653473a7baf03c5abf19c14e2136c646014752210285cb139a82dd9062b9ac1091cb1f91a01c11ab9c6a46bd09d0754dab86a38cc9210328c37f938748dcbbf15a0e5a9d1ba20f93f2c2d0ead63c7c14a5a10959b5ce8952aeffffffff0280c42b03000000001976a914d199925b52d367220b1e2a2d8815e635b571512f88ac65a7b3010000000017a9145c4dd14b9df138840b34237fdbe9159c420edbbe8700000000 > tmpfile
 chksum_prep
 echo " " | tee -a $logfile
 }
 
-testcase8() {
+testcase9() {
 # this trx has 1 input, 4 outputs (one is P2SH script)
-echo "#################################################################" | tee -a $logfile
-echo "### TESTCASE 8:                                               ###" | tee -a $logfile
-echo "#################################################################" | tee -a $logfile
-echo "###  this trx has 1 input, 4 outputs (one is P2SH script)     ###" >> $logfile
-echo "###  the trx-in script sig is unclear, need further docu...   ###" >> $logfile
-echo "###  the trx-in script sig is having more than one signature. ###" >> $logfile
-echo "###  Blockchain.info shows only a single one...               ###" >> $logfile
-echo "###  docu? support?                                           ###" >> $logfile
-echo "#################################################################" >> $logfile
+echo "#############################################################" | tee -a $logfile
+echo "### TESTCASE 9:                                           ###" | tee -a $logfile
+echo "#############################################################" | tee -a $logfile
+echo "###  this trx has 1 input, 4 outputs (one is P2SH script) ###" >> $logfile
+echo "###  the trx-in script sig is unclear, need further docu  ###" >> $logfile
+echo "###  the trx-in script sig is having more than one        ###" >> $logfile
+echo "###  signature, Blockchain.info shows only a single one.  ###" >> $logfile
+echo "###  docu? support?                                       ###" >> $logfile
+echo "#############################################################" >> $logfile
 echo "https://blockchain.info/de/rawtx/ea9462053d74024ec46dac07c450200194051020698e8640a5a024d8ac085590" | tee -a $logfile
 
-echo "TESTCASE 8a: " | tee -a $logfile
+echo "TESTCASE 9a: " | tee -a $logfile
 chksum_ref="2e461b0507b0b9fd973f47ffa9f294d32f608d518e975435490e73a774bb7250"
 ./trx2txt.sh -r 01000000013153f60f294bc14d0481138c1c9627ff71a580b596987a82e9eebf2ae3de232202000000fc0047304402200c2f9e8805de97fa785b93dcc9072197bf5c1095ea536320ed26c645ec3bfafc02202882258f394449f1b1365ce80eed26fbe01217657729664af6827d041e7e98510147304402206d5cbef275b6972bd8cc00aff666a6ca18f09a5b1d1bf49e6966ad815db7119a0220340e49d4b747c9bd8ac80dbe073525c57da43dc4d2727b789be7e66bed9c6d02014c695221037b7c16024e2e6f6575b7a8c55c581dce7effcd6045bdf196461be8ff88db24f1210223eefa59f9b51ca96e1f4710df3639c58aae32c4cef1dd0333e7478de3dd4c6321034d03a7e6806e734c171be535999239aac76822427c217ee7564ab752cdc12dde53aeffffffff048d40ad120100000017a914fb8e0ce6d2f35c566908fd225b7f96e72df603d3872d5f0000000000001976a914768ac2a2530b2987d2e6506edc71dcf9f0a7b6e688ac00350c00000000001976a91452f28673c5aed9126b91d9eac5cbe1e02276a2cb88ac18b30700000000001976a914f3678c60ec389c7b132b5e5b0e1434b6dcd48f4188ac00000000 > tmpfile
 chksum_prep
 
-echo "TESTCASE 8b: " | tee -a $logfile
+echo "TESTCASE 9b: " | tee -a $logfile
 chksum_ref="f30438404160c7e508c9677f765587188a765c72391e60a0d12a37254683aee2"
 ./trx2txt.sh -v -r 01000000013153f60f294bc14d0481138c1c9627ff71a580b596987a82e9eebf2ae3de232202000000fc0047304402200c2f9e8805de97fa785b93dcc9072197bf5c1095ea536320ed26c645ec3bfafc02202882258f394449f1b1365ce80eed26fbe01217657729664af6827d041e7e98510147304402206d5cbef275b6972bd8cc00aff666a6ca18f09a5b1d1bf49e6966ad815db7119a0220340e49d4b747c9bd8ac80dbe073525c57da43dc4d2727b789be7e66bed9c6d02014c695221037b7c16024e2e6f6575b7a8c55c581dce7effcd6045bdf196461be8ff88db24f1210223eefa59f9b51ca96e1f4710df3639c58aae32c4cef1dd0333e7478de3dd4c6321034d03a7e6806e734c171be535999239aac76822427c217ee7564ab752cdc12dde53aeffffffff048d40ad120100000017a914fb8e0ce6d2f35c566908fd225b7f96e72df603d3872d5f0000000000001976a914768ac2a2530b2987d2e6506edc71dcf9f0a7b6e688ac00350c00000000001976a91452f28673c5aed9126b91d9eac5cbe1e02276a2cb88ac18b30700000000001976a914f3678c60ec389c7b132b5e5b0e1434b6dcd48f4188ac00000000 > tmpfile
 chksum_prep
 
-echo "TESTCASE 8c: " | tee -a $logfile
+echo "TESTCASE 9c: " | tee -a $logfile
 chksum_ref="ba5bf41341d8879d7f5cb0c96bed5c458afceae2527a1ece9744136e3f5cc493"
 ./trx2txt.sh -vv -r 01000000013153f60f294bc14d0481138c1c9627ff71a580b596987a82e9eebf2ae3de232202000000fc0047304402200c2f9e8805de97fa785b93dcc9072197bf5c1095ea536320ed26c645ec3bfafc02202882258f394449f1b1365ce80eed26fbe01217657729664af6827d041e7e98510147304402206d5cbef275b6972bd8cc00aff666a6ca18f09a5b1d1bf49e6966ad815db7119a0220340e49d4b747c9bd8ac80dbe073525c57da43dc4d2727b789be7e66bed9c6d02014c695221037b7c16024e2e6f6575b7a8c55c581dce7effcd6045bdf196461be8ff88db24f1210223eefa59f9b51ca96e1f4710df3639c58aae32c4cef1dd0333e7478de3dd4c6321034d03a7e6806e734c171be535999239aac76822427c217ee7564ab752cdc12dde53aeffffffff048d40ad120100000017a914fb8e0ce6d2f35c566908fd225b7f96e72df603d3872d5f0000000000001976a914768ac2a2530b2987d2e6506edc71dcf9f0a7b6e688ac00350c00000000001976a91452f28673c5aed9126b91d9eac5cbe1e02276a2cb88ac18b30700000000001976a914f3678c60ec389c7b132b5e5b0e1434b6dcd48f4188ac00000000 > tmpfile
 chksum_prep
 echo " " | tee -a $logfile
 }
 
-testcase9() {
+testcase10() {
 # this trx has a complicated input script (PK script?)
-echo "#################################################################" | tee -a $logfile
-echo "### TESTCASE 9:                                               ###" | tee -a $logfile
-echo "#################################################################" | tee -a $logfile
-echo "###  this trx has 35 output scripts ...                       ###" >> $logfile
-echo "#################################################################" >> $logfile
+echo "#############################################################" | tee -a $logfile
+echo "### TESTCASE 10:                                          ###" | tee -a $logfile
+echo "#############################################################" | tee -a $logfile
+echo "###  this trx has 35 output scripts ...                   ###" >> $logfile
+echo "#############################################################" >> $logfile
 echo "https://blockchain.info/de/rawtx/7c83fe5ba301e655973e9de8eb9fb5e20ef3a6dd9b46c503679c858399eda50f" | tee -a $logfile
 
-echo "TESTCASE 9a: " | tee -a $logfile
+echo "TESTCASE 10a: " | tee -a $logfile
 chksum_verify "$result" "SHA256(tmpfile)= 0a1f0b6c5dce37e107665674fdc38eb786f7b1c434989ea1ce8b0c4658240fc7"
   ./trx2txt.sh -r 01000000014675ab74e5c496c8eecaaa87c6136bc68ebaaac7a25e70ee29b7bbaffad6810f000000008b4830450220296d4f4869a63efdee4c5ea31dcad559b4e03332462ba5442bfdf00a662cb77102210088a7f10361eae3e159ae6a8b5b7a569bf6bfa2de64fb3f5d0552f8be568ba6f50141042a9a97b2109ef496ffb1033576a5635cecc6ab679ad0b7c43d33ddf38b1f44c22ea42d5c01ac2752094ff81e79dda77d8b501a64102207c45fb89ea1ad9229ddffffffff23e8030000000000001976a914801314cd462b98c64dd4c3f4d6474cad11ea39d588ace8030000000000001976a9145bb7d22851413e1d61e8db5395a8c7c537256ea088ace8030000000000001976a914371f197d5ba5e32bd98260eec7f0e51227b6969088ace8030000000000001976a9143e546d0acc0de5aa3d66d7a920900ecbc66c203188ace8030000000000001976a9140337e0710056f114c9c469a68775498df9f9fa1688ace8030000000000001976a9149c628c82aa7b81da7c6a235049eb2979c4a65cfc88ace8030000000000001976a914cd1d7e863f891c493e093ada840ef5a67ad2d6cc88ace8030000000000001976a91476f074340381e6f8a40aec4a6e2d92485679412c88ace8030000000000001976a9140fb87a5071385b6976397d1c53ee16f09139a33488ace8030000000000001976a9143d37873ffd2964a1a4c8bade4852020ec5426d3688ace8030000000000001976a9145d14a857fce8da8edfb8f7d1c4bbc316622b722788ace8030000000000001976a9140a77fdb4cc81631b6ea2991ff60b47d57812d8e788ace8030000000000001976a91454514fe9251b5e381d13171cd6fca63f61d8b72688ace8030000000000001976a914cffe3e032a686cc3f2c9e417865afa8a52ed962b88ace8030000000000001976a914fd9dc3525076c1ffe9c33389ea157d07af2e41d488ace8030000000000001976a9143bedfe927d55a8c8adfe5e4b5dddd4ea3487b4c988ace8030000000000001976a914e49275e86ece605f271f26a9559520eb9c0ae8d888ace8030000000000001976a91469256ba90b0d7e406d86a51d343d157ff0aab7bd88ace8030000000000001976a9148ab0cb809cd893cb0cb16f647d024db94f09d76588ace8030000000000001976a9140688e383f02b528c92e25caae5785ffaa81a26aa88ace8030000000000001976a914d959be6c92037995558f43a55b1c271628f96e8d88ac8038f240000000001976a914d15e54e341d538ce3e9e7596e0dbcda8c12cc08988ace8030000000000001976a91495019a8168e8dcd2ef2d47ca57c1bf49358eb6fe88ace8030000000000001976a914caf67cfe28b511498b0d1792bedeec6b6e8a3c8d88ace8030000000000001976a914082a3adf4c8497fbd7d90f21cbec318b0dfdd2b288ace8030000000000001976a9144c53722fd5b0bc8a5b23ae4efc6233142b69d8ee88ace8030000000000001976a9146abd1edce61a7fdd2d134e8468560ecffb45334e88ace8030000000000001976a914dc3343b674cf2016b8968e6146ba5cc9228f14a488ace8030000000000001976a9145f395a91d07712604d7cd6fabd685b9bfd3900dd88ace8030000000000001976a914fc35239072cd5c19d9f761996951679fb03bb43188ace8030000000000001976a914b1ec1d5e0591abbbe3134c94c37e74d034b9312288ace8030000000000001976a9142d6351944aa38af6aa46d4a74cbb9016cf19ee7e88ace8030000000000001976a914879a49b3822806e0322565d457ce2b5989adaa6188ace8030000000000001976a9145ff26e3f8d542c5bb612e539649eaec0222afc3c88ace8030000000000001976a914105d54a4edcbe114a50bb01c79d230b7ed74a3e488ac00000000 > tmpfile
 chksum_prep
 
-echo "TESTCASE 9b: " | tee -a $logfile
+echo "TESTCASE 10b: " | tee -a $logfile
 chksum_ref="27cdb3f64ffe133ddb80602efb9f53c2369cde8a25aa8d4b22d33643388cd4c1"
   ./trx2txt.sh -v -r 01000000014675ab74e5c496c8eecaaa87c6136bc68ebaaac7a25e70ee29b7bbaffad6810f000000008b4830450220296d4f4869a63efdee4c5ea31dcad559b4e03332462ba5442bfdf00a662cb77102210088a7f10361eae3e159ae6a8b5b7a569bf6bfa2de64fb3f5d0552f8be568ba6f50141042a9a97b2109ef496ffb1033576a5635cecc6ab679ad0b7c43d33ddf38b1f44c22ea42d5c01ac2752094ff81e79dda77d8b501a64102207c45fb89ea1ad9229ddffffffff23e8030000000000001976a914801314cd462b98c64dd4c3f4d6474cad11ea39d588ace8030000000000001976a9145bb7d22851413e1d61e8db5395a8c7c537256ea088ace8030000000000001976a914371f197d5ba5e32bd98260eec7f0e51227b6969088ace8030000000000001976a9143e546d0acc0de5aa3d66d7a920900ecbc66c203188ace8030000000000001976a9140337e0710056f114c9c469a68775498df9f9fa1688ace8030000000000001976a9149c628c82aa7b81da7c6a235049eb2979c4a65cfc88ace8030000000000001976a914cd1d7e863f891c493e093ada840ef5a67ad2d6cc88ace8030000000000001976a91476f074340381e6f8a40aec4a6e2d92485679412c88ace8030000000000001976a9140fb87a5071385b6976397d1c53ee16f09139a33488ace8030000000000001976a9143d37873ffd2964a1a4c8bade4852020ec5426d3688ace8030000000000001976a9145d14a857fce8da8edfb8f7d1c4bbc316622b722788ace8030000000000001976a9140a77fdb4cc81631b6ea2991ff60b47d57812d8e788ace8030000000000001976a91454514fe9251b5e381d13171cd6fca63f61d8b72688ace8030000000000001976a914cffe3e032a686cc3f2c9e417865afa8a52ed962b88ace8030000000000001976a914fd9dc3525076c1ffe9c33389ea157d07af2e41d488ace8030000000000001976a9143bedfe927d55a8c8adfe5e4b5dddd4ea3487b4c988ace8030000000000001976a914e49275e86ece605f271f26a9559520eb9c0ae8d888ace8030000000000001976a91469256ba90b0d7e406d86a51d343d157ff0aab7bd88ace8030000000000001976a9148ab0cb809cd893cb0cb16f647d024db94f09d76588ace8030000000000001976a9140688e383f02b528c92e25caae5785ffaa81a26aa88ace8030000000000001976a914d959be6c92037995558f43a55b1c271628f96e8d88ac8038f240000000001976a914d15e54e341d538ce3e9e7596e0dbcda8c12cc08988ace8030000000000001976a91495019a8168e8dcd2ef2d47ca57c1bf49358eb6fe88ace8030000000000001976a914caf67cfe28b511498b0d1792bedeec6b6e8a3c8d88ace8030000000000001976a914082a3adf4c8497fbd7d90f21cbec318b0dfdd2b288ace8030000000000001976a9144c53722fd5b0bc8a5b23ae4efc6233142b69d8ee88ace8030000000000001976a9146abd1edce61a7fdd2d134e8468560ecffb45334e88ace8030000000000001976a914dc3343b674cf2016b8968e6146ba5cc9228f14a488ace8030000000000001976a9145f395a91d07712604d7cd6fabd685b9bfd3900dd88ace8030000000000001976a914fc35239072cd5c19d9f761996951679fb03bb43188ace8030000000000001976a914b1ec1d5e0591abbbe3134c94c37e74d034b9312288ace8030000000000001976a9142d6351944aa38af6aa46d4a74cbb9016cf19ee7e88ace8030000000000001976a914879a49b3822806e0322565d457ce2b5989adaa6188ace8030000000000001976a9145ff26e3f8d542c5bb612e539649eaec0222afc3c88ace8030000000000001976a914105d54a4edcbe114a50bb01c79d230b7ed74a3e488ac00000000 > tmpfile
 chksum_prep
 
-echo "TESTCASE 9c: " | tee -a $logfile
+echo "TESTCASE 10c: " | tee -a $logfile
 chksum_ref="df9fe79f8380e40d083766f7f0e754d5eb9af5ea910fc33e7ff1597f543263a7"
   ./trx2txt.sh -vv -r 01000000014675ab74e5c496c8eecaaa87c6136bc68ebaaac7a25e70ee29b7bbaffad6810f000000008b4830450220296d4f4869a63efdee4c5ea31dcad559b4e03332462ba5442bfdf00a662cb77102210088a7f10361eae3e159ae6a8b5b7a569bf6bfa2de64fb3f5d0552f8be568ba6f50141042a9a97b2109ef496ffb1033576a5635cecc6ab679ad0b7c43d33ddf38b1f44c22ea42d5c01ac2752094ff81e79dda77d8b501a64102207c45fb89ea1ad9229ddffffffff23e8030000000000001976a914801314cd462b98c64dd4c3f4d6474cad11ea39d588ace8030000000000001976a9145bb7d22851413e1d61e8db5395a8c7c537256ea088ace8030000000000001976a914371f197d5ba5e32bd98260eec7f0e51227b6969088ace8030000000000001976a9143e546d0acc0de5aa3d66d7a920900ecbc66c203188ace8030000000000001976a9140337e0710056f114c9c469a68775498df9f9fa1688ace8030000000000001976a9149c628c82aa7b81da7c6a235049eb2979c4a65cfc88ace8030000000000001976a914cd1d7e863f891c493e093ada840ef5a67ad2d6cc88ace8030000000000001976a91476f074340381e6f8a40aec4a6e2d92485679412c88ace8030000000000001976a9140fb87a5071385b6976397d1c53ee16f09139a33488ace8030000000000001976a9143d37873ffd2964a1a4c8bade4852020ec5426d3688ace8030000000000001976a9145d14a857fce8da8edfb8f7d1c4bbc316622b722788ace8030000000000001976a9140a77fdb4cc81631b6ea2991ff60b47d57812d8e788ace8030000000000001976a91454514fe9251b5e381d13171cd6fca63f61d8b72688ace8030000000000001976a914cffe3e032a686cc3f2c9e417865afa8a52ed962b88ace8030000000000001976a914fd9dc3525076c1ffe9c33389ea157d07af2e41d488ace8030000000000001976a9143bedfe927d55a8c8adfe5e4b5dddd4ea3487b4c988ace8030000000000001976a914e49275e86ece605f271f26a9559520eb9c0ae8d888ace8030000000000001976a91469256ba90b0d7e406d86a51d343d157ff0aab7bd88ace8030000000000001976a9148ab0cb809cd893cb0cb16f647d024db94f09d76588ace8030000000000001976a9140688e383f02b528c92e25caae5785ffaa81a26aa88ace8030000000000001976a914d959be6c92037995558f43a55b1c271628f96e8d88ac8038f240000000001976a914d15e54e341d538ce3e9e7596e0dbcda8c12cc08988ace8030000000000001976a91495019a8168e8dcd2ef2d47ca57c1bf49358eb6fe88ace8030000000000001976a914caf67cfe28b511498b0d1792bedeec6b6e8a3c8d88ace8030000000000001976a914082a3adf4c8497fbd7d90f21cbec318b0dfdd2b288ace8030000000000001976a9144c53722fd5b0bc8a5b23ae4efc6233142b69d8ee88ace8030000000000001976a9146abd1edce61a7fdd2d134e8468560ecffb45334e88ace8030000000000001976a914dc3343b674cf2016b8968e6146ba5cc9228f14a488ace8030000000000001976a9145f395a91d07712604d7cd6fabd685b9bfd3900dd88ace8030000000000001976a914fc35239072cd5c19d9f761996951679fb03bb43188ace8030000000000001976a914b1ec1d5e0591abbbe3134c94c37e74d034b9312288ace8030000000000001976a9142d6351944aa38af6aa46d4a74cbb9016cf19ee7e88ace8030000000000001976a914879a49b3822806e0322565d457ce2b5989adaa6188ace8030000000000001976a9145ff26e3f8d542c5bb612e539649eaec0222afc3c88ace8030000000000001976a914105d54a4edcbe114a50bb01c79d230b7ed74a3e488ac00000000 > tmpfile
 chksum_prep
@@ -350,18 +356,18 @@ echo " " | tee -a $logfile
 }
 
 
-testcase10() {
-echo "TESTCASE 10a: " | tee -a $logfile
+testcase11() {
+echo "TESTCASE 11a: " | tee -a $logfile
 chksum_ref="df9fe79f8380e40d083766f7f0e754d5eb9af5ea910fc33e7ff1597f543263a7"
 ./trx2txt.sh > tmpfile
 chksum_prep
 
-echo "TESTCASE 10b: " | tee -a $logfile
+echo "TESTCASE 11b: " | tee -a $logfile
 chksum_ref="df9fe79f8380e40d083766f7f0e754d5eb9af5ea910fc33e7ff1597f543263a7"
 ./trx2txt.sh -v > tmpfile
 chksum_prep
 
-echo "TESTCASE 10c: " | tee -a $logfile
+echo "TESTCASE 11c: " | tee -a $logfile
 chksum_ref="df9fe79f8380e40d083766f7f0e754d5eb9af5ea910fc33e7ff1597f543263a7"
 ./trx2txt.sh -vv > tmpfile
 chksum_prep

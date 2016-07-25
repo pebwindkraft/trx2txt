@@ -48,4 +48,7 @@ date    by    file                   comment
 16jul07 svn   trx2txt.sh             extended parameter handling
 16jul08 svn   trx_create_sign.sh     created new file to properly manage creating/signing trx
 16jul09 svn   trx_key2pem.sh         created file to manage key handling (hex to PEM) for signing
+23jul09 svn   trx-suite	             ### released version to GITHUB ###
+25jul17 svn   trx2txt.sh             fixed var_int (V_INT) handling
+25jul17 svn   trx_create_sign.sh     fixed parameter handling for '-u'
 
