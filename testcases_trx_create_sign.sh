@@ -55,7 +55,7 @@ echo "#############################################################" >> $logfile
 # based on: http://bitcoin.stackexchange.com/questions/3374/how-to-redeem-a-basic-tx
 
 echo "TESTCASE 1a: $chksum_cmd trx_create_sign.sh" | tee -a $logfile
-chksum_ref="1af82c2c2c276a42322c1f2e03166b24dc7bd6781841f702c775199a927d8752" 
+chksum_ref="ef1737c368adf02c15a1bdf95a6b15e1f705b28106b0820aeb351d7b80aed96a" 
 cp trx_create_sign.sh tmpfile
 chksum_prep
 

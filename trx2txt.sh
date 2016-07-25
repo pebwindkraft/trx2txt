@@ -121,20 +121,26 @@ proc_var_int() {
   to=$(( $offset + 1 ))
   V_INT=$( echo $RAW_TRX | cut -b $offset-$to )
   if [ "$V_INT" == "FD" ] ; then
-    length=4
+    offset=$(( $offset + 2 ))
     to=$(( $offset + 3 ))
     V_INT=$( echo $RAW_TRX | cut -b $offset-$to )
-    offset=$(( $offset + 2 ))
+    # big endian conversion!
+    V_INT=$( reverse_hex $V_INT )
+    offset=$(( $offset + 4 ))
   elif [ "$V_INT" == "FE" ] ; then
-    length=8
+    offset=$(( $offset + 2 ))
     to=$(( $offset + 7 ))
     V_INT=$( echo $RAW_TRX | cut -b $offset-$to )
-    offset=$(( $offset + 2 ))
+    # big endian conversion!
+    V_INT=$( reverse_hex $V_INT )
+    offset=$(( $offset + 8 ))
   elif [ "$V_INT" == "FF" ] ; then
-    length=16
+    offset=$(( $offset + 2 ))
     to=$(( $offset + 15 ))
     V_INT=$( echo $RAW_TRX | cut -b $offset-$to )
-    offset=$(( $offset + 2 ))
+    # big endian conversion!
+    V_INT=$( reverse_hex $V_INT )
+    offset=$(( $offset + 16 ))
   else
     offset=$(( $offset + 2 ))
   fi
