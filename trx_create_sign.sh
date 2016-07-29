@@ -10,6 +10,7 @@
 #
 # Version	by	date	comment
 # 0.1		svn	22jul16	initial release
+# 0.2		svn	28jul16	added strict DER signature checking
 # 
 # Permission to use, copy, modify, and distribute this software for any 
 # purpose with or without fee is hereby granted, provided that the above 
@@ -150,20 +151,20 @@ check_tool() {
   fi
 }
 
-##########################################
-# procedure to check for necessary tools #
-##########################################
+#######################################
+# procedure to check even length of h #
+#######################################
 leading_zeros() {
   # get the length of the string h, and if not 'even', add a beginning 
   # zero. Background: we need to convert the hex characters to a hex value, 
   # and need to have an even amount of characters... 
   len=${#h}
-  s=`expr $len % 2`
+  s=$(( $len % 2 ))
   if [ $s -ne 0 ] ; then
     h=$( echo "0$h" )
   fi
   len=${#h}
-  echo "after mod 2 calc, h=$h"
+  # echo "after mod 2 calc, h=$h"
 } 
 
 #####################################################
@@ -190,6 +191,271 @@ get_chksum() {
                cut -b 1-8 | tr [:lower:] [:upper:] )
 }
 
+#######################################################
+# procedure to strictly check DER-encoded signature ###
+#######################################################
+verify_scriptsig() {
+  vv_output "  ################################################"
+  vv_output "  # strict verification of DER-encoded SCRIPTSIG #"
+  vv_output "  ################################################"
+
+  ########################################
+  # Minimum and maximum size constraints #
+  #   18 < scriptsig_len < 146           #
+  ########################################
+  scriptsig_len=${#SCRIPTSIG}
+  if [ "$scriptsig_len" -gt 18 ] && [ "$scriptsig_len" -lt 146 ] ; then
+    vv_output "  Scriptsig length: $scriptsig_len, good (18 < scriptsig_len < 146)"
+  else
+    echo "*** error: script sig verification: (STEP 15) "
+    echo "           scriptsig len ($scriptsig_len) incorrect, expected is:"
+    echo "           18 < scriptsig_len < 146"
+    echo "           exiting gracefully ... "
+    echo " "
+    exit 1
+  fi
+
+  ######################################
+  # scriptsig always starts with 0x30" # 
+  ######################################
+  SCRIPTSIG=$( echo $SCRIPTSIG | tr [:lower:] [:upper:] )
+  from=1
+  to=2
+  compare_string=$( echo $SCRIPTSIG | cut -b $from-$to )
+  if [ "$compare_string" == "30" ] ; then
+    vv_output "  0x30: scriptsig always starts with 0x30"
+  else
+    echo "*** error: script sig verification: (STEP 15) "
+    echo "           scriptsig starts with 0x$compare_string, expected is 0x30"
+    echo "           wrong header byte (indicating a compound structure)"
+    echo "           exiting gracefully ... "
+    echo " "
+    exit 1
+  fi
+
+  ###################################################
+  # a 1-byte length descriptor for all what follows #
+  ###################################################
+  from=$(( $from + 2 ))
+  to=$(( $to + 2 ))
+  SigRS_len=$( echo $SCRIPTSIG | cut -b $from-$to )
+  SigRS_len_dec=$( echo "ibase=16;$SigRS_len * 2" | bc )
+  vv_output "  0x$SigRS_len: a 1-byte length descriptor for all what follows (decimal chars: $SigRS_len_dec)"
+  if [ $SigRS_len_dec -lt $scriptsig_len ] ; then
+    vv_output "        SigRS length is less than scriptsig ($scriptsig_len) - ok"
+  else
+    echo "*** error: script sig verification: (STEP 15)"
+    echo "           1-byte length descriptor ($SigRS_len_dec) exceeds scripsig length ($scriptsig_len)"
+    echo "           exiting gracefully ... "
+    echo " "
+    exit 1
+  fi
+
+  #########################################
+  # 0x02 header byte for the R-coordinate #
+  #########################################
+  from=$(( $from + 2 ))
+  to=$(( $to + 2 ))
+  compare_string=$( echo $SCRIPTSIG | cut -b $from-$to )
+  if [ "$compare_string" == "02" ] ; then
+    vv_output "  0x02: a header byte indicating an integer follows"
+  else
+    echo "*** error: script sig verification: (STEP 15) "
+    echo "           scriptsig[$from-$to] is 0x$compare_string, expected is 0x02"
+    echo "           0x02 is a header byte indicating an integer follows"
+    echo "           exiting gracefully ... "
+    echo " "
+    exit 1
+  fi
+
+  #############################################
+  # length of R coordinate (<= 0 not allowed) #
+  #############################################
+  from=$(( $from + 2 ))
+  to=$(( $to + 2 ))
+  compare_string=$( echo $SCRIPTSIG | cut -b $from-$to )
+  R_len_dec=$( echo "ibase=16;$compare_string * 2" | bc )
+  vv_output "  0x$compare_string: a 1-byte length descriptor for the R-value (decimal chars: $R_len_dec)"
+  if [ $R_len_dec -le 0 ] ; then
+    echo "*** error: script sig verification: (STEP 15) "
+    echo "           length of R coordinate <= 0 not allowed"
+    echo "           exiting gracefully ... "
+    echo " "
+    exit 1
+  fi
+
+  ########################################
+  # 
+  ########################################
+  #        // Null bytes at the start of R are not allowed, unless R would
+  #        // otherwise be interpreted as a negative number.
+  #        if (lenR > 1 && (sig[4] == 0x00) && !(sig[5] & 0x80)) return false;
+  #    
+
+
+
+  #############################################
+  # the R coordinate, as a big-endian integer #
+  #############################################
+  from=$(( $from + 2 ))
+  to=$(( $from + $R_len_dec - 1 ))
+  R_value_string=$( echo $SCRIPTSIG | cut -b $from-$to )
+  vv_output "        the R coordinate, as a big-endian integer"
+  vv_output "        0x$R_value_string"
+  # in case we need to replace later the S values (if s -gt N/2 ; then s = N - s),
+  # we save start position of S coordinates
+  R_string_end=$(( $to ))
+
+  #########################################
+  # 0x02 header byte for the S-coordinate #
+  #########################################
+  from=$(( $from + $R_len_dec ))
+  to=$(( $from + 1 ))
+  compare_string=$( echo $SCRIPTSIG | cut -b $from-$to )
+  if [ "$compare_string" == "02" ] ; then
+    vv_output "  0x02: a header byte indicating an integer follows"
+  else
+    echo "*** error: script sig verification: (STEP 15) "
+    echo "           scriptsig[$from-$to] is 0x$compare_string, expected is 0x02"
+    echo "           0x02 is a header byte indicating an integer follows"
+    echo "           exiting gracefully ... "
+    echo " "
+    exit 1
+  fi
+
+  #############################################
+  # length of S coordinate (<= 0 not allowed) #
+  #############################################
+  from=$(( $from + 2 ))
+  to=$(( $to + 2 ))
+  compare_string=$( echo $SCRIPTSIG | cut -b $from-$to )
+  S_len_dec=$( echo "ibase=16;$compare_string * 2" | bc )
+  vv_output "  0x$compare_string: a 1-byte length descriptor for the S-value (decimal chars: $S_len_dec)"
+  if [ $S_len_dec -le 0 ] ; then
+    echo "*** error: script sig verification: (STEP 15)"
+    echo "           length of S coordinate <= 0 not allowed"
+    echo "           exiting gracefully ... "
+    echo " "
+    exit 1
+  fi
+
+  ########################################
+  # 
+  ########################################
+  #        // Null bytes at the start of S are not allowed, unless S would otherwise be
+  #        // interpreted as a negative number.
+  #        if (lenS > 1 && (sig[lenR + 6] == 0x00) && !(sig[lenR + 7] & 0x80)) return false;
+  #    
+
+  ###############################################
+  # script sig S element and outside boundaries #
+  ###############################################
+  # Make sure the length of the S element is still inside the signature.
+  value=$(( $S_len_dec + $from ))
+  if [ $value -lt $scriptsig_len ] ; then
+    vv_output "        S-Value is within scriptsig boundaries - ok"
+  else
+    echo "*** error: script sig verification: (STEP 15)"
+    echo "           script sig S element is outside boundaries"
+    echo "           scriptsig_len=$scriptsig_len"
+    echo "           current position=$from"
+    echo "           S-Value length=$S_len_dec"
+    echo "           new pos=$value"
+    echo "           exiting gracefully ... "
+    echo " "
+    exit 1
+  fi
+
+  #############################################
+  # the S coordinate, as a big-endian integer #
+  #############################################
+  from=$(( $from + 2 ))
+  to=$(( $from + $S_len_dec - 1 ))
+  S_value_string=$( echo $SCRIPTSIG | cut -b $from-$to )
+  vv_output "        the S coordinate, as a big-endian integer"
+  vv_output "        0x$S_value_string"
+
+
+  ##########################################################
+  # Make sure the R & S length covers the entire signature #
+  ##########################################################
+  # Make sure the length covers the entire signature.
+  # add 8 to the length, for the header and length bytes of R and S 
+  value=$(( $R_len_dec + $S_len_dec + 8 ))
+  if [ $value -eq $SigRS_len_dec ] ; then
+    vv_output "  SigRS_len (sigscript[3-4]: hex $SigRS_len, dec $SigRS_len_dec) = R-Value + S-Value + 8"
+    vv_output  "            (8 added, for the header and length bytes of R and S) - ok "
+  else
+    echo "*** error: script sig verification: (STEP 15)"
+    echo "           R-Value + S-Value != SigRS_len (sigscript[3-4)"
+    echo "           scriptsig[3-4]=$SigRS_len_dec"
+    echo "           R-Value length=$R_len_dec"
+    echo "           S-Value length=$S_len_dec"
+    echo "           exiting gracefully ... "
+    echo " "
+    exit 1
+  fi
+
+  #################################
+  # if s -gt N/2 ; then s = N - s #
+  #################################
+  # make sure, SIG has correct parts - this is "Bitcoin" specific... 
+  # SIG is <r><s> concatenated together. An s value greater than N/2 
+  # is not allowed. Need to add code: if s -gt N/2 ; then s = N - s
+  # N is the curve order: 
+  # N hex:   FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
+  # N hex/2: 7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0
+  # N dec: 
+  #   115792089237316195423570985008687907852837564279074904382605163141518161494337
+  # N dec/2:
+  #   57896044618658097711785492504343953926418782139537452191302581570759080747168
+  #         
+  Nhalf_Value_hex=7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0
+  value=$( echo "obase=16;ibase=16;$S_value_string < $Nhalf_Value_hex" | bc ) 
+  if [ $value -eq 1 ] ; then 
+    vv_output "  cool, S is smaller than N/2"
+  else
+    vv_output "  *** S is not smaller than N/2, converting ... new S value:"
+    S_value=$( echo "obase=16;ibase=16;FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141 - $S_value_string" | bc )
+    if [ ${#S_value} -ne 64 ] ; then 
+      echo "*** error: script sig verification: (STEP 15)"
+      echo "           something went deadly wrong ..."
+      echo "$value"
+      echo "len new S value=${#value}"
+      echo "old scriptsig:"
+      echo "$SCRIPTSIG" 
+      echo "           exiting gracefully ... "
+      echo " "
+      exit 1
+    else
+      # we are good to assemble a new sig :-)
+      SCRIPTSIG=$( echo "30" )
+      # new S value = 64 chars (32 Bytes). 8 = length fields and integer for R & S
+      value=$( echo "$R_len_dec + 64 + 8" | bc )
+      value=$( echo "obase=16;$value / 2" | bc )
+      SCRIPTSIG=$( echo "$SCRIPTSIG$value" )
+      value="02"
+      SCRIPTSIG=$( echo "$SCRIPTSIG$value" )
+      value=${#R_value_string}
+      value=$( echo "obase=16;$value / 2" | bc )
+      SCRIPTSIG=$( echo "$SCRIPTSIG$value" )
+      SCRIPTSIG=$( echo "$SCRIPTSIG$R_value_string" )
+      value="02"
+      SCRIPTSIG=$( echo "$SCRIPTSIG$value" )
+      # this is S value, must be 32 bytes, in hex 20 ...
+      value="20"
+      SCRIPTSIG=$( echo "$SCRIPTSIG$value" )
+      SCRIPTSIG=$( echo "$SCRIPTSIG$S_value" )
+    fi
+  fi
+  vv_output "  ################################################"
+  vv_output "  # end of strict verification of SCRIPTSIG      #"
+  vv_output "  ################################################"
+  vv_output "  "
+  vv_output "$SCRIPTSIG"
+  vv_output "  "
+}
+
 echo "######################################################################"
 echo "### trx_create_sign.sh: create or sign a raw, unsigned Bitcoin trx ###"
 echo "######################################################################"
@@ -214,7 +480,7 @@ else
     case "$1" in
       -c)
          C_PARAM_FLAG=1
-         echo "  [-c] param given, creating a raw, unsigned trx"
+         echo "[-c] param given, creating a raw, unsigned trx"
          shift 
          ;;
       -m)
@@ -230,7 +496,7 @@ else
            exit 1
          fi
          if [ "$2" == ""  ] ; then
-           echo "*** you must provide a Bitcoin TRANSACTION_ID to the -t parameter!"
+           echo "*** you must provide a Bitcoin TRANSACTION_ID to the -m parameter!"
            exit 1
          fi
          PREV_TRX=$2
@@ -256,7 +522,7 @@ else
          ;;
       -s)
          S_PARAM_FLAG=1
-         echo "  [-s] param given, sign a raw, unsigned trx"
+         echo "[-s] param given, sign a raw, unsigned trx"
          shift
          ;;
       -t)
@@ -294,7 +560,7 @@ else
            echo "*** this seems to be an invalid unsigned raw trx as parameter."
            echo "    An unsigned raw trx is a hex string, consisiting of the"
            echo "    <trx id>, <prev output index>, <prev pubkey script>, <amount>"
-           echo "    and an <address>. This is min ~225 chars long ..."
+           echo "    and an <address>. This is min ~227 chars long ..."
            echo "    Try using the help function ('-h' parameter)."
            echo "    "
            exit 1
@@ -603,12 +869,13 @@ if [ "$C_PARAM_FLAG" -eq 1 ] ; then
   s=$TARGET_ADDRESS 
   echo $s | awk -f trx_verify_bc_address.awk
   if [ $? -eq 1 ] ; then
-    echo "*** ERROR: could not recognize valid bitcoin address"
+    echo "    Address: $s "
     echo "    exiting gracefully ..."
     exit 1
   fi 
 
-  s=$( echo $s | awk -f trx_base58.awk )
+  # s=$( echo $s | awk -f trx_base58.awk )
+  s=$( echo $s | awk -f trx_verify_bc_address.awk )
   vv_output "$s"
   s=$( echo $s | sed 's/[0-9]*/ 58*&+ /g' )
   vv_output "$s"
@@ -633,6 +900,7 @@ if [ "$C_PARAM_FLAG" -eq 1 ] ; then
   leading_zeros
 
   get_chksum
+
   if [ "$chksum_f8" != "$chksum_l8" ] ; then
     # try max 10 iterations for leading zeros ...
     i=0
@@ -739,80 +1007,9 @@ openssl dgst -sha256 -sign privkey.pem -out tmp_trx.sig tmp_urtx_sha256.raw
 SCRIPTSIG=$( od -An -t x1 tmp_trx.sig | tr -d [:blank:] | tr -d "\n" )
 vv_output $SCRIPTSIG
 vv_output " "
+verify_scriptsig
 
-# make sure, SIG has correct parts - this is "Bitcoin" specific... 
-# SIG is <r><s> concatenated together. An s value greater than N/2 
-# is not allowed. Need to add code: if s -gt N/2 ; then s = N - s
-# N is the curve order: 
-# N hex:   FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
-# N hex/2: 7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0
-# N dec:   115792089237316195423570985008687907852837564279074904382605163141518161494337
-# N dec/2:  57896044618658097711785492504343953926418782139537452191302581570759080747168
-#
 
-# A correct DER-encoded signature has the following form:
-# 
-#   0x30: a header byte indicating a compound structure.
-#   A 1-byte length descriptor for all what follows.
-#   0x02: a header byte indicating an integer.
-#   A 1-byte length descriptor for the R value
-#   The R coordinate, as a big-endian integer.
-#   0x02: a header byte indicating an integer.
-#   A 1-byte length descriptor for the S value.
-#   The S coordinate, as a big-endian integer.
-#    
-#        // Minimum and maximum size constraints.
-#        if (sig.size() < 9) return false;
-#        if (sig.size() > 73) return false;
-#    
-#        // A signature is of type 0x30 (compound).
-#        if (sig[0] != 0x30) return false;
-#    
-#        // Make sure the length covers the entire signature.
-#        if (sig[1] != sig.size() - 3) return false;
-#    
-#        // Extract the length of the R element.
-#        unsigned int lenR = sig[3];
-#    
-#        // Make sure the length of the S element is still inside the signature.
-#        if (5 + lenR >= sig.size()) return false;
-#    
-#        // Extract the length of the S element.
-#        unsigned int lenS = sig[5 + lenR];
-#    
-#        // Verify that the length of the signature matches the sum of the length
-#        // of the elements.
-#        if ((size_t)(lenR + lenS + 7) != sig.size()) return false;
-#     
-#        // Check whether the R element is an integer.
-#        if (sig[2] != 0x02) return false;
-#    
-#        // Zero-length integers are not allowed for R.
-#        if (lenR == 0) return false;
-#    
-#        // Negative numbers are not allowed for R.
-#        if (sig[4] & 0x80) return false;
-#    
-#        // Null bytes at the start of R are not allowed, unless R would
-#        // otherwise be interpreted as a negative number.
-#        if (lenR > 1 && (sig[4] == 0x00) && !(sig[5] & 0x80)) return false;
-#    
-#        // Check whether the S element is an integer.
-#        if (sig[lenR + 4] != 0x02) return false;
-#    
-#        // Zero-length integers are not allowed for S.
-#        if (lenS == 0) return false;
-#    
-#        // Negative numbers are not allowed for S.
-#        if (sig[lenR + 6] & 0x80) return false;
-#    
-#        // Null bytes at the start of S are not allowed, unless S would otherwise be
-#        // interpreted as a negative number.
-#        if (lenS > 1 && (sig[lenR + 6] == 0x00) && !(sig[lenR + 7] & 0x80)) return false;
-#    
-#        return true;
-#    }
-#    
 ##############################################################################
 ### STEP 16 - construct the final scriptSig                                ###
 ##############################################################################

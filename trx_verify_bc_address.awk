@@ -3,11 +3,11 @@
 # awk script by Sven-Volker Nowarra 
 #
 # Version	by	date	comment
-# 0.1		svn	11jul16	initial release
+# 0.1		svn	15jul16	initial release
 #
-# verify if the provided parameter ("the bitcoin address") is valid. 
-# The chars of the bitcoin address must be a part of the base58 charset.
+# verify if the provided parameter ("the bitcoin address") and base58 decode it.
 # The length of the bitcoin address must be 33 or 34 chars.
+# The chars of the bitcoin address must be a part of the base58 charset.
 # 
 # This is done to stay a POSIX compliant, cause the different shell 
 # comparisons with regexp(s) are not really portable. Also code 
@@ -25,7 +25,7 @@ BEGIN {
 ### AND HERE WE GO ...                                                 ###
 ##########################################################################
 {
-if ( length($0) == "33" || length($0) == "34")
+if (length($0) == "33" || length($0) == "34" || length($0) == "51" || length($0) == "52")
   { 
   # loop through the bitcoin adress, fetch each char
   while ( bc_address_offset <= length($0) ) {
@@ -37,7 +37,7 @@ if ( length($0) == "33" || length($0) == "34")
       base58str_char = substr(base58str, base58str_offset, 1) 
       if ( bc_address_char == base58str_char )
         {
-        # printf "  bc_address_char %s = base58str_char %s \n", bc_address_char, base58str_char 
+        printf " %d", base58str_offset-1
         base58str_offset=1 
         found=1
         break

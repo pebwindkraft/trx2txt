@@ -4,7 +4,8 @@
 # script by Sven-Volker Nowarra 
 # 
 # Version	by	date	comment
-# 0.1		svn	11jun16	initial release
+# 0.1		svn	11jun16 initial release
+# 0.2		svn	25jul16 added multisig functionality
 # 
 # Copyright (c) 2015, 2016 Volker Nowarra 
 # Complete rewrite of code in June 2016 from following reference:
@@ -63,46 +64,13 @@
 # 
 # 
 
+typeset -i msig_offset=1
+typeset -i cur_opcode_dec
+offset=0
+
 QUIET=0
 VERBOSE=0
 param=483045022100A428348FF55B2B59BC55DDACB1A00F4ECDABE282707BA5185D39FE9CDF05D7F0022074232DAE76965B6311CEA2D9E5708A0F137F4EA2B0E36D0818450C67C9BA259D0121025F95E8A33556E9D7311FA748E9434B333A4ECFB590C773480A196DEAB0DEDEE1
-
-case "$1" in
-  -q)
-     QUIET=1
-     shift
-     ;;
-  -v)
-     VERBOSE=1
-     shift
-     ;;
-  -?|-h|--help)
-     echo "usage: trx_in_sig_script.sh [-?|-h|--help|-q] hex_string"
-     echo "  "
-     echo "convert a raw hex string from a bitcoin trx-out into it's OpCodes. "
-     echo "if no parameter is given, the data from a demo trx is used. "
-     echo "  "
-     exit 0
-     ;;
-  *)
-     ;;
-esac
-
-if [ $QUIET -eq 0 ] ; then 
-  echo "################################################################"
-  echo "### trx_in_sig_script.sh: read SIG_script OPCODES from a trx ###"
-  echo "################################################################"
-  echo "  "
-fi
-
-if [ $# -eq 0 ] ; then 
-  if [ $QUIET -eq 0 ] ; then 
-    echo "no parameter, hence showing example pk_script:"
-    echo "$param"
-  fi
-else 
-  param=$( echo $1 | tr "[:lower:]" "[:upper:]" )
-fi
 
 #################################
 ### Some procedures first ... ###
@@ -133,7 +101,6 @@ get_address() {
 ### procedure to show data separated by colon or newline ###
 ############################################################
 op_data_show() {
-  # if [ $QUIET -eq 0 ] ; then echo "op_data_show"; fi
   ret_string=''
   n=1
   output=
@@ -623,19 +590,112 @@ S33_OP_EQUALVERIFY() {
 S34_P2PKH() {
   echo "* This is a P2PKH script in an unsigned raw transaction"
 }
+############################
+### STATUS 35 (MSIG ...) ###
+############################
+S35_MSIG() {
+  get_next_opcode
+  case $cur_opcode in
+    *)  echo "   $cur_opcode: OP_INTEGER $cur_opcode_dec Bytes (0x$cur_opcode) go to stack"
+        msig_len=$cur_opcode_dec
+        S36_LENGTH
+        ;;
+  esac
+}
+##########################
+### STATUS 36 (length) ###
+##########################
+S36_LENGTH() {
+  get_next_opcode
+  case $cur_opcode in
+    52) echo "   $cur_opcode: OP_2: push 2 Bytes onto stack"
+        echo "###### we go multisig, found OP_2 (= 2 out of n multisig ?) #######"
+        S37_OP2
+        ;;
+    *)  echo "   $cur_opcode: unknown opcode "
+        ;;
+  esac
+}
+##########################
+### STATUS 37 (length) ###
+##########################
+S37_OP2() {
+  to=$(( $offset + msig_len ))
+  while [ $offset -le $to ]  
+   do
+    get_next_opcode
+    case $cur_opcode in
+      21) echo "   $cur_opcode: OP_DATA_0x21: compressed pub key"
+          op_data_show
+          get_address
+          ;;
+      41) echo "   $cur_opcode: OP_DATA_0x41: uncompressed pub key"
+          op_data_show
+          get_address
+          ;;
+      53) echo "   $cur_opcode: OP_3: push 3 Bytes onto stack"
+          echo "   Multisig needs 3 pubkeys ?"
+          ;;
+      AE) echo "   $cur_opcode: OP_CHECKMULTISIG"
+          echo "########## This terminates the Multisignature structure ###########"
+          break
+          ;;
+      *)  echo "   $cur_opcode: unknown OpCode"
+          ;;
+    esac
+  done
+}
+
 ##########################################################################
 ### AND HERE WE GO ...                                                 ###
 ##########################################################################
 
-typeset -i cur_opcode_dec
-offset=0
+case "$1" in
+  -q)
+     QUIET=1
+     shift
+     ;;
+  -v)
+     VERBOSE=1
+     shift
+     ;;
+  -?|-h|--help)
+     echo "usage: trx_in_sig_script.sh [-?|-h|--help|-q] hex_string"
+     echo "  "
+     echo "convert a raw hex string from a bitcoin trx-out into it's OpCodes. "
+     echo "if no parameter is given, the data from a demo trx is used. "
+     echo "  "
+     exit 0
+     ;;
+  *)
+     ;;
+esac
+
+if [ $QUIET -eq 0 ] ; then 
+  echo "################################################################"
+  echo "### trx_in_sig_script.sh: read SIG_script OPCODES from a trx ###"
+  echo "################################################################"
+  echo "  "
+fi
+
+if [ $# -eq 0 ] ; then 
+  if [ $QUIET -eq 0 ] ; then 
+    echo "no parameter, hence showing example pk_script:"
+    echo "$param"
+  fi
+else 
+  param=$( echo $1 | tr "[:lower:]" "[:upper:]" )
+fi
 
 if [ $QUIET -eq 0 ] ; then 
   echo "a valid bitcoin signature (r,s) is going to look like:"
   echo "<30><len><02><len><r bytes><02><len><s bytes><01>"
   echo "with 9 <= length(sig) <= 73"
   echo " "
+  echo "Multisig is much more complicated :-)"
+  echo " "
 fi
+
 opcode_array=$( echo $param | sed 's/[[:xdigit:]]\{2\}/ &/g' )
 opcode_array_elements=$( echo ${#opcode_array} / 3 | bc )
 # echo "opcode_array_elements=$opcode_array_elements, array=$opcode_array"
@@ -658,7 +718,7 @@ elif [ "$shell_string" == "ksh" ] ; then
 fi
 
 #####################################
-### STATUS 0  INIT                ###
+### STATUS 0 - INIT               ###
 #####################################
   while [ $offset -lt $opcode_array_elements ]  
    do
@@ -671,6 +731,9 @@ fi
           ;;
       3C) echo "   $cur_opcode: OP_DATA_0x3C"
 	  S24_SIG_LEN_0x3C
+          ;;
+      4C) echo "   $cur_opcode: OP_PUSHDATA1 (next byte is number of bytes that go to stack)" 
+	  S35_MSIG
           ;;
       41) echo "   $cur_opcode: OP_DATA_0x41"
 	  S4_SIG_LEN_0x41
@@ -691,8 +754,9 @@ fi
           ;;
     esac
 
-    if [ $offset -gt 300 ] ; then
+    if [ $offset -gt 350 ] ; then
       echo "emergency exit, output scripts should not reach this size?"
+      echo "          offset=$offset, scriptlen=$opcode_array_elements"
       exit 1
     fi
   done
