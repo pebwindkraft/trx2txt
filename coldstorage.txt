@@ -32,7 +32,6 @@ sign usage:   ./trx_create_sign.sh [-h|-q|-v|-vv] -s -u <raw_trx> -w|-x <privkey
  
 limited to 1 prev TRX_ID, with one prev output index, and one address
   
-lorena:/Data/Bitcoin/trx2txt $ 
 
 
 What do we need? There are basically three steps:

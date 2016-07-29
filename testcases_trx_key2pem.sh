@@ -54,12 +54,12 @@ echo "###  first get the checksums of all necessary files       ###" >> $logfile
 echo "#############################################################" >> $logfile
 
 echo "TESTCASE 1a: $chksum_cmd trx_key2pem.sh" | tee -a $logfile
-chksum_ref="56a38f616f94edd8c6c10360fa05466ec0265b6ef5746c5f1e35d622bace967e"
+chksum_ref="3f7ad1a5f3a9dd436d12c8040f0c721de8f0a7a6fcd50ee7b734af5b15b16b92"
 cp trx_key2pem.sh tmpfile
 chksum_prep
 
 echo "TESTCASE 1b: $chksum_cmd trx_verify_bc_address.awk" | tee -a $logfile
-chksum_ref="400057c2073db19e4b47cd31796bbfbfc492c82ca2acda75df030a30a39a622b" 
+chksum_ref="eb7e79feeba3f1181291ce39620d93b1b8cf807cdfbe911b42e1d6cdbfecfbdc" 
 cp trx_verify_bc_address.awk tmpfile
 chksum_prep
 echo " " | tee -a $logfile

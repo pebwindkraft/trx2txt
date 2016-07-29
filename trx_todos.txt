@@ -2,45 +2,6 @@
 ### Issues / errors in processing ###
 #####################################
 
-I1: 16jun16 svn:
-==================
-Testcase 7 does not recognize trx as P2SH, addresses are displayed wrong.
-
-I3: 30jun16 svn:
-==================
-trx2txt.sh: 
-a.) need to properly verify unsigned raw trx - no code yet ...
-b.) need to create testcases
-
-I5: 30jun16 svn:
-==================
-trx_create_sign.sh: beautify code, remove unnecessary stuff, and do two things:
-a.) strict DER verification in STEP 16
-b.) verify that r or s is not bigger than N/2, also STEP 16
-c.) prepare test cases for these addresses (STEP 11, leading zeros/chksum)
-# 16UwLL9Risc3QfPqBUvKofHmBQ7wMtjvM
-# 10966776006953D5567439E5E39F86A0D273BEED61967F6
-# 12GTF5ARSrqJ2kZd4C9XyGPesoVgP5qCdM
-# 112ZbzFcSpcCoY2EfPNmgxFmv4tVuLSoB4
-
-I6: 30jun16 svn:
-==================
-not all programs require awk/tr/bc/sed - clean up required. 
-
-I7: 03Jul2016 svn:
-==================
-trx2txt.sh - Multisig does not work (yet). Example:
-
-./trx2txt.sh -vv -r 0100000001e4b6d3d43cd4e5e0f55c113a2d2841da62c5f18884a357192ecb425028f3ced601000000fd3f0100493046022100cb2f6f28dd5a7eb3cfc754f8b82f549757a5eecab5d603439ce8f6b3df546d110221008347f0972ce0f67a454f32505ad16982e00362677c285140c1e776d8b0b7b61001483045022100d0897475dfd660879070fb65d4c2f92ed4d8e2b66224ac67063272b047ad41d002201e8c0c71686457aad21d6f18ab53b31cdb35fa9ee32125facaf9010606957120014ca9524104b4c95968a95d1dc1ff73f686aa3625623187bb3d3c2bde0662f010e9574935cf2d3ea780c1832e191d272146ea86ee5f498972eab7fa63b47773b2c40d9b49f2410426d6e16db384e5055e6a95534ef68c76152790f44627ff4b9d8a24f08b6ba2658fe36d0ff24bec57f1e77e3692cba9bc93b599a09a5b252df2b0328530b839072103e687b9c1d259b47d5a88c5bc56d81dad4e86f58e34bdd9beb12bb04bbdb741fa53aeffffffff02f7b31c01000000001976a91452086ce9ee9441b31e7da1d9b4e0aeb687ffad2c88acb8c11800000000001976a914cd9ec27a6a9f84b7d31f6fa073d5df7583c190e688ac00000000
-
---> what are these OpCodes?
-   4C: unknown OpCode
-   A9: unknown OpCode
-   52: unknown OpCode
-
-this one works ok:
-./trx2txt.sh -vv -r 010000000216f7342825c156476c430f3e2765e0c393283b08246a66d122a45c836554ef03010000006b483045022100dd55b040174c90e85f0d33417dfccd96fa4f6b5ef50c32a1b720c24efc097f73022018d8a6b003b46c578d42ff4221af46068b64dd4e55d2d074175038a6e620e66b012103a86d6cd289a76d1b2b13d362d9f58d1753dd4252be1ef8a404831dd1de45f6c2ffffffffe18f73b450139de5c7375dcd2bd249ef6a42ad19661104df796dccdc98d34722000000006a47304402202e733dd23eb16130c3aa705cd04ffa31928616f2558063281cf642d786bf3eef022010a4d48968c504391c19c1cf67163d5618809bacb644d797a24a05f2130aa9f7012103a86d6cd289a76d1b2b13d362d9f58d1753dd4252be1ef8a404831dd1de45f6c2ffffffff02a6ea17000000000017a914f815b036d9bbbce5e9f2a00abd1bf3dc91e9551087413c0200000000001976a914ff57cb19528c04096067b8db38d18ecd0b37789388ac00000000
-
 I9: 14jul16 svn:
 ==================
 trx_create_sign.sh: base58decoding: need to extract beginning "1"s and count them...
@@ -49,7 +10,7 @@ The logic is described below, at the end - need to verify...
 
 I10: 18jul16 svn:
 ==================
-testcases_trx2txt.sh: testcase 9 fails on OpenBSD, cause parameter buffer is only 2048 Bytes
+testcases_trx2txt.sh: testcase 11 fails on OpenBSD, cause parameter buffer is only 2048 Bytes
 
 I11: 21jul16, svn:
 ==================
@@ -60,6 +21,18 @@ Private Key:5KPgmne3z4vo8uPwKHDF6gZbDJpiXALLY9fipEuKtMLH9pbdbi7
 Public Key:1AxTsiWDsMu3ijy2s3NTF6kk1zJRUGjNyh
 Private Key:5KEcUhqeSP4WAvaRRytXD3ChcnLUheaUX5yVLen244q8wHtGmxR
 
+I12: 27jul16, svn:
+==================
+trx_in_sig_script.sh and it's graph:
+need to refactor code: need to use "cut -b" for "get_next_char" in while loop. 
+(get rid of "if bash == BASH4" dependencies, do not use array).
+This is already used in trx_create_sign.sh successfully.
+
+I13: 27jul16, svn:
+==================
+trx_in_sig_script.sh and it's graph:
+--> Status 32-34 not required, cause unsigned raw trx are handled in trx2txt.sh, and there
+    we call trx_out_script - so no code required here ...
 
 #####################################
 ### Extensions / new Requirements ###
@@ -68,7 +41,9 @@ E1:
 ===============
 can it be extended for usage in testnet?
 
-
+E2:
+===============
+For important values: make use of a 2of3 multisig with ione in cold storage
 
 
 
@@ -95,18 +70,12 @@ Starting with an RIPEMD-160 hash of 20 bytes that are all 0's...
 0000000000000000000000000000000000000000
 
 Add a version byte in front (in the case of a P2PKH address, that would be a byte with value 0).
-
 000000000000000000000000000000000000000000
 
 Now we have 21 bytes that are all 0's.
-
 Calculate a checksum on this value:
-
-Code:
-
 SHA256(SHA256(000000000000000000000000000000000000000000)) = 
 94a00911c4da27f9271727ffa7a14d8d5588fc0fff9964340ec4065f387e622b
-
 
 Append the first 4 bytes (8 characters) of the checksum to the RIPEMD-160 hash with version byte:
 00000000000000000000000000000000000000000094a00911
@@ -119,35 +88,26 @@ Convert the value from hex to base58:
 4oLvT2 (base 58)
 
 Each LEADING 00 BYTE is replaced with a single 1:
-Code:
-
 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
-
 
 Concatenate 21 ones with 6 base58 digits:
 1111111111111111111114oLvT2
 
 21 "ones" plus 6 base58 digits = 27 characters
 
+#################################################################
 
 Now lets try the same with 19 zeros and a bytes with value 1...
-
 0000000000000000000000000000000000000001
 
 Add a version byte in front (in the case of a P2PKH address, that would be a byte with value 0).
-
 000000000000000000000000000000000000000001
 
 Now we have 20 bytes that are all 0's, followed by a byte that is represented in hex as "01"
-
 Calculate a checksum on this value:
-
-Code:
-
 SHA256(SHA256(000000000000000000000000000000000000000001)) = 
 9d35b5b9d5befcf2d6b89994f7f64279b0645d5d4a5f1a6fa2dcc615bbed04ef
-
 
 Append the first 4 bytes (8 characters) of the checksum to the RIPEMD-160 hash with version byte:
 0000000000000000000000000000000000000000019d35b5b9
@@ -160,11 +120,8 @@ Convert the value from hex to base58:
 BZbvjr (base 58)
 
 Each LEADING 00 BYTE is replaced with a single 1:
-Code:
-
 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
-
 
 Concatenate 20 ones with 6 base58 digits:
 111111111111111111111BZbvjr

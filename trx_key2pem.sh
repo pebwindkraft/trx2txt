@@ -163,7 +163,8 @@ reverse_hex() {
 # procedure to convert from wif (base58) to hex #
 #################################################
 wif2hex() {
-  s=$( echo $wif_privkey | awk -f trx_base58.awk )
+  # s=$( echo $wif_privkey | awk -f trx_base58.awk )
+  s=$( echo $wif_privkey | awk -f trx_verify_bc_address.awk )
   vv_output "$s"
   s=$( echo $s | sed 's/[0-9]*/ 58*&+ /g' )
   vv_output "$s"

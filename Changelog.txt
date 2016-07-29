@@ -7,6 +7,7 @@
 #
 # 
 date    by    file                   comment
+yymmmdd
 16jun10 svn   all :-)                initial release
 16jun11 svn   trx_out_pk_script.sh   convert parameter "to upper" string before decoding
 16jun11 svn   trx_out_pk_script.sh   fix state machine for OP_DATA33
@@ -48,7 +49,12 @@ date    by    file                   comment
 16jul07 svn   trx2txt.sh             extended parameter handling
 16jul08 svn   trx_create_sign.sh     created new file to properly manage creating/signing trx
 16jul09 svn   trx_key2pem.sh         created file to manage key handling (hex to PEM) for signing
-23jul09 svn   trx-suite	             ### released version to GITHUB ###
-25jul17 svn   trx2txt.sh             fixed var_int (V_INT) handling
-25jul17 svn   trx_create_sign.sh     fixed parameter handling for '-u'
+16jul09 svn   trx-suite	             ### released version to GITHUB ###
+16jul17 svn   trx2txt.sh             fixed var_int (V_INT) handling
+16jul17 svn   trx_create_sign.sh     fixed parameter handling for '-u'
+16jul27 svn   trx_in_sig_state_machine.graphml - added S35-S37 for MULTISIG
+16jul27 svn   trx_in_sig_script.sh   added multisig handling 
+16jul27 svn   trx2txt.sh             corrected code for unsigned raw trx
+16jul28 svn   trx_create_sign.sh     included strict DER-encoded signature checks 
+
 
