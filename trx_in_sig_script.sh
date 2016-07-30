@@ -33,26 +33,6 @@
 #  where the r and s values are non-negative, and don't exceed 33 bytes 
 #  including a possible padding zero byte.
 #
-#  Pieter Wuille, August 2013 
-#    (http://bitcoin.stackexchange.com/questions/12554/
-#            why-the-signature-is-always-65-13232-bytes-long/12556#12556)
-#  A correct DER-encoded signature has the following form:
-#
-#   0x30: a header byte indicating a compound structure.
-#   A 1-byte length descriptor for all what follows.
-#   0x02: a header byte indicating an integer.
-#   A 1-byte length descriptor for the R value
-#   The R coordinate, as a big-endian integer.
-#   0x02: a header byte indicating an integer.
-#   A 1-byte length descriptor for the S value.
-#   The S coordinate, as a big-endian integer.
-#
-#  Where initial 0x00 bytes for R and S are not allowed, except when their 
-#  first byte would otherwise be above 0x7F (in which case a single 0x00 in 
-#  front is required). Also note that inside transaction signatures, an 
-#  extra hashtype byte follows the actual signature data.
-#
-#
 # from: https://bitcointalk.org/index.php?topic=1383883.0
 #  Unless the bottom 5 bits are 0x02 (SIGHASH_NONE) or 0x03 (SIGHASH_SINGLE), 
 #  all the outputs are included.  If the bit for 0x20 is set, then all inputs 
@@ -62,11 +42,12 @@
 #  SIGHASH_SINGLE = 3,
 #  SIGHASH_ANYONECANPAY = 0x80
 # 
+#  ???
 # 
 
 typeset -i msig_offset=1
 typeset -i cur_opcode_dec
-offset=0
+offset=1
 
 QUIET=0
 VERBOSE=0
@@ -106,19 +87,20 @@ op_data_show() {
   output=
   while [ $n -le $cur_opcode_dec ]
    do
-    output=$output${opcode_ar[offset]}
-    ret_string=$ret_string${opcode_ar[offset]}
+    to=$(( offset + 1 ))
+    opcode=$( echo $param | cut -b $offset-$to )
+    output=$output$opcode
     if [ $n -eq 8 ] || [ $n -eq 24 ] || [ $n -eq 40 ] || [ $n -eq 56 ] ; then 
       output=$output":"
-    fi
-    if [ $n -eq 16 ] || [ $n -eq 32 ] || [ $n -eq 48 ] || [ $n -eq 64 ] ; then 
+    elif [ $n -eq 16 ] || [ $n -eq 32 ] || [ $n -eq 48 ] || [ $n -eq 64 ] ; then 
       echo "       $output" 
       output=
+      opcode=
     fi
     n=$(( n + 1 ))
-    offset=$(( offset + 1 ))
+    offset=$(( offset + 2 ))
   done 
-  echo "       $output" 
+  echo "       $opcode" 
 }
 
 #####################
@@ -126,11 +108,13 @@ op_data_show() {
 #####################
 get_next_opcode() {
   # if [ $QUIET -eq 0 ] ; then echo "get_next_opcode"; fi
-  cur_opcode=${opcode_ar[offset]}
+  to=$(( offset + 1 ))
+  cur_opcode=$( echo $param | cut -b $offset-$to )
+  # echo "from=$offset, to=$to, opcode=$cur_opcode"
   cur_hexcode="0x"$cur_opcode
   cur_opcode_dec=$( echo "ibase=16;$cur_opcode" | bc )
   # echo "offset=$offset, opcode=$cur_opcode, opcode_dec=$cur_opcode_dec"
-  offset=$(( offset + 1 ))
+  offset=$(( offset + 2 ))
 }
 
 #####################################
@@ -165,8 +149,7 @@ S2_SIG_LEN_0x48() {
 ### STATUS 3 (S3_SIG_LEN_0x21)    ###
 #####################################
 S3_SIG_LEN_0x21() {
-  # get_next_opcode
-  cur_opcode=${opcode_ar[offset]}
+  get_next_opcode
   case $cur_opcode in
     02) echo "   $cur_opcode: OP_INT_0x02"
         S19_PK   
@@ -183,7 +166,7 @@ S3_SIG_LEN_0x21() {
 #####################################
 S4_SIG_LEN_0x41() {
   v_output S4_SIG_LEN_0x41
-  cur_opcode=${opcode_ar[offset]}
+  get_next_opcode
   case $cur_opcode in
     04) echo "   $cur_opcode: OP_LENGTH_0X04"
         S20_PK 
@@ -696,34 +679,14 @@ if [ $QUIET -eq 0 ] ; then
   echo " "
 fi
 
-opcode_array=$( echo $param | sed 's/[[:xdigit:]]\{2\}/ &/g' )
-opcode_array_elements=$( echo ${#opcode_array} / 3 | bc )
-# echo "opcode_array_elements=$opcode_array_elements, array=$opcode_array"
-
-shell_string=$( echo $SHELL | cut -d / -f 3 )
-if [ "$shell_string" == "bash" ] ; then
-  i=0
-  j=1
-  declare -a opcode_ar
-  while [ $i -lt $opcode_array_elements ]
-   do
-    # echo ${opcode_array:$j:2}
-    opcode_ar[$i]=${opcode_array:$j:2}
-    # echo "opcode_ar[$j]=$opcode_ar[$j]"
-    i=$(( i + 1 ))
-    j=$(( j + 3 ))
-  done
-elif [ "$shell_string" == "ksh" ] ; then
-  set -A opcode_ar $opcode_array
-fi
-
 #####################################
 ### STATUS 0 - INIT               ###
 #####################################
-  while [ $offset -lt $opcode_array_elements ]  
+  opcode_array_len=${#param}
+  while [ $offset -lt $opcode_array_len ]  
    do
-    v_output S0_INIT
     get_next_opcode
+    v_output "S0_INIT, opcode=$cur_opcode"
     
     case $cur_opcode in
       21) echo "   $cur_opcode: OP_DATA_0x21"

@@ -56,5 +56,8 @@ yymmmdd
 16jul27 svn   trx_in_sig_script.sh   added multisig handling 
 16jul27 svn   trx2txt.sh             corrected code for unsigned raw trx
 16jul28 svn   trx_create_sign.sh     included strict DER-encoded signature checks 
+16jul30 svn   trx_in_sig_script.sh   refactored code: use "cut -b" for "get_next_char"
+                                     get rid of "if bash == BASH4", no array handling
+
 
 
