@@ -12,27 +12,17 @@ I10: 18jul16 svn:
 ==================
 testcases_trx2txt.sh: testcase 11 fails on OpenBSD, cause parameter buffer is only 2048 Bytes
 
-I11: 21jul16, svn:
-==================
-verify these priv/pubkey combinations:
-Public Key:1EXLETbRDmwsB4gJimQhprvktZDXLkoDWT
-Private Key:5KPgmne3z4vo8uPwKHDF6gZbDJpiXALLY9fipEuKtMLH9pbdbi7
-
-Public Key:1AxTsiWDsMu3ijy2s3NTF6kk1zJRUGjNyh
-Private Key:5KEcUhqeSP4WAvaRRytXD3ChcnLUheaUX5yVLen244q8wHtGmxR
-
-I12: 27jul16, svn:
-==================
-trx_in_sig_script.sh and it's graph:
-need to refactor code: need to use "cut -b" for "get_next_char" in while loop. 
-(get rid of "if bash == BASH4" dependencies, do not use array).
-This is already used in trx_create_sign.sh successfully.
-
 I13: 27jul16, svn:
 ==================
 trx_in_sig_script.sh and it's graph:
 --> Status 32-34 not required, cause unsigned raw trx are handled in trx2txt.sh, and there
     we call trx_out_script - so no code required here ...
+
+I14: 30jul16, svn:
+==================
+try cold storage with this: 1JmPRD_unspent.txt
+make sure, fees don't get weird, and all three trx are used ...
+
 
 #####################################
 ### Extensions / new Requirements ###
