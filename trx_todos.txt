@@ -10,7 +10,7 @@ The logic is described below, at the end - need to verify...
 
 I10: 18jul16 svn:
 ==================
-testcases_trx2txt.sh: testcase 11 fails on OpenBSD, cause parameter buffer is only 2048 Bytes
+testcases_trx2txt.sh: testcase 20 fails on OpenBSD, cause parameter buffer is only 2048 Bytes
 
 I13: 27jul16, svn:
 ==================
@@ -23,6 +23,23 @@ I14: 30jul16, svn:
 try cold storage with this: 1JmPRD_unspent.txt
 make sure, fees don't get weird, and all three trx are used ...
 
+I15: 31jul16, svn:
+==================
+testcases_trx2txt.sh: testcase 8 for trx2txt.sh does not show the multisig "in" addresses
+testcases_trx2txt.sh: testcase 9 for trx2txt.sh does not show the multisig "in" addresses
+--> blockchain.info shows the multisig addresses. How do they know???
+
+
+I16: 31jul16, svn:
+==================
+testcases_trx2txt.sh: testcase 9 on OpenBSD failes this way:
+need to take care for buffering input?
+TESTCASE 9c: 
+cut: [-bcf] list: 2072 too large (max 2048)
+cut: [-bcf] list: 2080 too large (max 2048)
+cut: [-bcf] list: 2082 too large (max 2048)
+...
+
 
 #####################################
 ### Extensions / new Requirements ###
@@ -33,7 +50,14 @@ can it be extended for usage in testnet?
 
 E2:
 ===============
-For important values: make use of a 2of3 multisig with ione in cold storage
+For important values: make use of a 2of3 multisig with one in cold storage
+generate 3 addresses (and 3 private keys) A, B & C... and 
+create 1 multisig address (D) using those 3 in a 2-of-3 configuration
+
+the multisig address starts with a "3", all the others (A,B & C) should be "1". 
+send funds into the multisig address D (starts with a "3")... 
+make sure all the private keys for your A, B & C addresses are all backed up/stored independently of each other. 
+to take funds out of D, create a transaction using one of A,B or C.. and then co-sign the transaction using one of the other addresses.
 
 
 

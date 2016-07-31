@@ -71,18 +71,17 @@ v_output() {
 #         Technical_background_of_version_1_Bitcoin_addresses#How_to_create_Bitcoin_Address
 # http://gobittest.appspot.com/Address
 get_address() {
-  # if [ $QUIET -eq 0 ] ; then echo "get_address"; fi
   result=$( echo $ret_string | sed 's/[[:xdigit:]]\{2\}/\\x&/g' )
   result=$( printf "$result" | openssl dgst -sha256 | cut -d " " -f 2 )
   result=$( echo $result | sed 's/[[:xdigit:]]\{2\}/\\x&/g' )
   result=$( printf "$result" | openssl dgst -rmd160 | cut -d " " -f 2 )
   ./trx_base58check_enc.sh -q $result
+  ret_string=''
 }
 ############################################################
 ### procedure to show data separated by colon or newline ###
 ############################################################
 op_data_show() {
-  ret_string=''
   n=1
   output=
   while [ $n -le $cur_opcode_dec ]
@@ -90,6 +89,7 @@ op_data_show() {
     to=$(( offset + 1 ))
     opcode=$( echo $param | cut -b $offset-$to )
     output=$output$opcode
+    ret_string=$ret_string$opcode
     if [ $n -eq 8 ] || [ $n -eq 24 ] || [ $n -eq 40 ] || [ $n -eq 56 ] ; then 
       output=$output":"
     elif [ $n -eq 16 ] || [ $n -eq 32 ] || [ $n -eq 48 ] || [ $n -eq 64 ] ; then 
@@ -107,13 +107,12 @@ op_data_show() {
 ### GET NEXT CODE ###
 #####################
 get_next_opcode() {
-  # if [ $QUIET -eq 0 ] ; then echo "get_next_opcode"; fi
   to=$(( offset + 1 ))
   cur_opcode=$( echo $param | cut -b $offset-$to )
   # echo "from=$offset, to=$to, opcode=$cur_opcode"
   cur_hexcode="0x"$cur_opcode
   cur_opcode_dec=$( echo "ibase=16;$cur_opcode" | bc )
-  # echo "offset=$offset, opcode=$cur_opcode, opcode_dec=$cur_opcode_dec"
+  # v_output "offset=$offset, opcode=$cur_opcode, opcode_dec=$cur_opcode_dec"
   offset=$(( offset + 2 ))
 }
 
@@ -121,11 +120,16 @@ get_next_opcode() {
 ### STATUS 1 (S1_SIG_LEN_0x47)    ###
 #####################################
 S1_SIG_LEN_0x47() {
-  # if [ $QUIET -eq 0 ] ; then echo "S1_SIG_LEN_0x47"; fi
+  v_output "S1_SIG_LEN_0x47"
   get_next_opcode
   case $cur_opcode in
     30) echo "   $cur_opcode: OP_LENGTH_0x30"
         S5_Sigtype
+        ;;
+    52) echo "   $cur_opcode: OP_2"
+        # in case we go for msig, then length of msig is 0x47 Bytes (2x71chars=142)
+        msig_len=142
+        S30_MSIG2of2
         ;;
     *)  echo "   $cur_opcode: unknown opcode "
         ;;
@@ -135,7 +139,7 @@ S1_SIG_LEN_0x47() {
 ### STATUS 2 (S2_SIG_LEN_0x48)    ###
 #####################################
 S2_SIG_LEN_0x48() {
-  # if [ $QUIET -eq 0 ] ; then echo "S2_SIG_LEN_0x48"; fi
+  v_output "S2_SIG_LEN_0x48"
   get_next_opcode
   case $cur_opcode in
     30) echo "   $cur_opcode: OP_LENGTH_0x30"
@@ -149,12 +153,15 @@ S2_SIG_LEN_0x48() {
 ### STATUS 3 (S3_SIG_LEN_0x21)    ###
 #####################################
 S3_SIG_LEN_0x21() {
+  v_output "S3_SIG_LEN_0x21"
   get_next_opcode
   case $cur_opcode in
     02) echo "   $cur_opcode: OP_INT_0x02"
+        ret_string=02
         S19_PK   
         ;;
     03) echo "   $cur_opcode: OP_INT_0x03"
+        ret_string=03
         S19_PK   
         ;;
     *)  echo "   $cur_opcode: unknown opcode "
@@ -165,10 +172,11 @@ S3_SIG_LEN_0x21() {
 ### STATUS 4 (S4_SIG_LEN_0x41)    ###
 #####################################
 S4_SIG_LEN_0x41() {
-  v_output S4_SIG_LEN_0x41
+  v_output "S4_SIG_LEN_0x41"
   get_next_opcode
   case $cur_opcode in
     04) echo "   $cur_opcode: OP_LENGTH_0X04"
+        ret_string=04
         S20_PK 
         ;;
     *)  echo "   $cur_opcode: unknown opcode "
@@ -388,7 +396,7 @@ S18_SIG() {
 ### STATUS 19 (S19_PK)            ###
 #####################################
 S19_PK() {
-    # if [ $QUIET -eq 0 ] ; then echo "S19_PK"; fi
+    v_output "S19_PK"
     cur_opcode_dec=33
     op_data_show
     echo "* This terminates the Public Key (X9.63 COMPRESSED form)"
@@ -513,70 +521,50 @@ S28_SIG_X() {
         ;;
   esac
 }
-
 #####################################
-### STATUS 30 (OP_DUP)            ###
+### STATUS 30 (S30_MSIG2of2)      ###
 #####################################
-S30_OP_DUP() {
-  get_next_opcode
-  case $cur_opcode in
-    A9) echo "   $cur_opcode: OP_HASH160"
-        S31_OP_HASH160
-        ;;
-    *)  echo "   $cur_opcode: unknown opcode "
-        ;;
-  esac
-}
-#####################################
-### STATUS 31 (OP_HASH160)        ###
-#####################################
-S31_OP_HASH160() {
-  get_next_opcode
-  case $cur_opcode in
-    14) echo "   $cur_opcode: OP_Data$cur_opcode (= decimal $cur_opcode_dec)"
-        op_data_show
-        S32_OP_DATA20
-        ;;
-    *)  echo "   $cur_opcode: unknown opcode "
-        ;;
-  esac
-}
-#####################################
-### STATUS 32 (OP_DATA20)         ###
-#####################################
-S32_OP_DATA20() {
-  get_next_opcode
-  case "$cur_opcode" in
-    88) echo "   $cur_opcode: OP_EQUALVERIFY"
-        S33_OP_EQUALVERIFY
-        ;;
-    *)  echo "   $cur_opcode: unknown opcode "
-        ;;
-  esac
-}
-#####################################
-### STATUS 33 (OP_EQUALVERIFY)    ###
-#####################################
-S33_OP_EQUALVERIFY() {
-  get_next_opcode
-  case $cur_opcode in
-    AC) echo "   $cur_opcode: OP_CHECKSIG"
-        S34_P2PKH
-        ;;
-    *)  echo "   $cur_opcode: unknown opcode "
-        ;;
-  esac
-}
-#####################################
-### STATUS 34 (P2PKH)             ###
-#####################################
-S34_P2PKH() {
-  echo "* This is a P2PKH script in an unsigned raw transaction"
+S30_MSIG2of2() {
+  S30_to=$(( $offset + msig_len ))
+  if [ $S30_to -gt $opcodes_len ] ; then
+    S30_to=$opcodes_len 
+  fi
+  v_output "S30_MSIG2of2, offset=$offset, S30_to=$S30_to, opcodes_len=$opcodes_len"
+  while [ $offset -le $S30_to ]  
+   do
+    get_next_opcode
+    case $cur_opcode in
+      21) echo "   $cur_opcode: OP_DATA_0x21: compressed pub key"
+          op_data_show
+          echo "* This terminates the MultiSig's Public Key (X9.63 COMPRESSED form)"
+          echo "* corresponding bitcoin address is:"
+          get_address
+          echo " "
+          ;;
+      41) echo "   $cur_opcode: OP_DATA_0x41: uncompressed pub key"
+          op_data_show
+          echo "* This terminates the MultiSig's Public Key (X9.63 UNCOMPRESSED form)"
+          echo "* corresponding bitcoin address is:"
+          get_address
+          echo " "
+          ;;
+      52) echo "   $cur_opcode: OP_2: push 2 Bytes onto stack"
+          echo "       Multisig needs 2 pubkeys ?"
+          ;;
+      AE) echo "   $cur_opcode: OP_CHECKMULTISIG"
+          echo "       ########## Multisignature end ###########"
+          break
+          ;;
+      *)  echo "   $cur_opcode: unknown OpCode"
+          ;;
+    esac
+  done
+  # v_output "********* end S30 while ****************"
 }
 ############################
 ### STATUS 35 (MSIG ...) ###
 ############################
-S35_MSIG() {
+S35_MSIG2of3() {
   get_next_opcode
   case $cur_opcode in
     *)  echo "   $cur_opcode: OP_INTEGER $cur_opcode_dec Bytes (0x$cur_opcode) go to stack"
@@ -592,7 +580,7 @@ S36_LENGTH() {
   get_next_opcode
   case $cur_opcode in
     52) echo "   $cur_opcode: OP_2: push 2 Bytes onto stack"
-        echo "###### we go multisig, found OP_2 (= 2 out of n multisig ?) #######"
+        echo "       ###### we go multisig, ( 2 out of n multisig ?) #######"
         S37_OP2
         ;;
     *)  echo "   $cur_opcode: unknown opcode "
@@ -603,30 +591,41 @@ S36_LENGTH() {
 ### STATUS 37 (length) ###
 ##########################
 S37_OP2() {
-  to=$(( $offset + msig_len ))
-  while [ $offset -le $to ]  
+  S37_to=$(( $offset + msig_len ))
+  if [ $S37_to -gt $opcodes_len ] ; then
+    S37_to=$opcodes_len 
+  fi
+  v_output "S37_MSIG2of2, offset=$offset, S37_to=$S37_to, opcodes_len=$opcodes_len"
+  while [ $offset -le $S37_to ]  
    do
     get_next_opcode
     case $cur_opcode in
       21) echo "   $cur_opcode: OP_DATA_0x21: compressed pub key"
           op_data_show
+          echo "* This terminates the MultiSig's Public Key (X9.63 COMPRESSED form)"
+          echo "* corresponding bitcoin address is:"
           get_address
+          echo " "
           ;;
       41) echo "   $cur_opcode: OP_DATA_0x41: uncompressed pub key"
           op_data_show
+          echo "* This terminates the MultiSig's Public Key (X9.63 UNCOMPRESSED form)"
+          echo "* corresponding bitcoin address is:"
           get_address
+          echo " "
           ;;
       53) echo "   $cur_opcode: OP_3: push 3 Bytes onto stack"
           echo "   Multisig needs 3 pubkeys ?"
           ;;
       AE) echo "   $cur_opcode: OP_CHECKMULTISIG"
-          echo "########## This terminates the Multisignature structure ###########"
+          echo "       ########## Multisignature end ###########"
           break
           ;;
       *)  echo "   $cur_opcode: unknown OpCode"
           ;;
     esac
   done
+  # v_output "********* end S37 while ****************"
 }
 
 ##########################################################################
@@ -682,8 +681,8 @@ fi
 #####################################
 ### STATUS 0 - INIT               ###
 #####################################
-  opcode_array_len=${#param}
-  while [ $offset -lt $opcode_array_len ]  
+  opcodes_len=${#param}
+  while [ $offset -le $opcodes_len ]  
    do
     get_next_opcode
     v_output "S0_INIT, opcode=$cur_opcode"
@@ -696,7 +695,7 @@ fi
 	  S24_SIG_LEN_0x3C
           ;;
       4C) echo "   $cur_opcode: OP_PUSHDATA1 (next byte is number of bytes that go to stack)" 
-	  S35_MSIG
+	  S35_MSIG2of3
           ;;
       41) echo "   $cur_opcode: OP_DATA_0x41"
 	  S4_SIG_LEN_0x41
@@ -710,16 +709,15 @@ fi
       49) echo "   $cur_opcode: OP_DATA_0x49"
 	  S21_SIG_LEN_0x49
           ;;
-      76) echo "   $cur_opcode: OP_DATA_0x76"
-	  S30_OP_DUP
-          ;;
       *)  echo "   $cur_opcode: unknown OpCode"
           ;;
     esac
 
-    if [ $offset -gt 350 ] ; then
+    # sometimes the script hangs, need to have emergency break.
+    # careful: multisig scripts can get longer!!!
+    if [ $offset -gt 510 ] ; then
       echo "emergency exit, output scripts should not reach this size?"
-      echo "          offset=$offset, scriptlen=$opcode_array_elements"
+      echo "          offset=$offset, scriptlen=$opcodes_len"
       exit 1
     fi
   done
