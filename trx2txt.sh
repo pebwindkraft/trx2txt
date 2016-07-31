@@ -44,7 +44,6 @@ VVERBOSE=0
 # procedure to display helptext #
 #################################
 proc_help() {
-  echo "  "
   echo "usage: $0 [-h|-r|-t|-u|-v|-vv] [[raw]trx][...]"
   echo "  "
   echo "1. examine a raw trx into separate lines, as specified by:"
@@ -55,13 +54,11 @@ proc_help() {
   echo " -r   examine RAW trx (requires hex data as a parameter string)"
   echo " -t   examine an existing TRX (requires TRANSACTION_ID, to fetch from blockchain.info)"
   echo " -u   examine UNSIGNED raw transaction (requires hex data as a parameter string)"
+  echo "      currently limited to 1 prev TRX_ID, with one input, and one output index"
   echo " -v   display verbose output"
   echo " -vv  display even more verbose output"
   echo "  "
   echo " without parameter, a default transaction will be displayed"
-  echo " "
-  echo " "
-  echo "°note: currently limited to 1 prev TRX_ID, with one input, and one output index"
   echo " "
 }
 
@@ -258,6 +255,8 @@ else
          echo "VVERBOSE and VERBOSE output turned on"
          if [ "$2" == ""  ] ; then
            RAW_TRX=$RAW_TRX_DEFAULT
+           echo "using defaults, based on: "
+           echo "   $RAW_TRX_LINK"
          fi
          shift
          ;;
@@ -386,7 +385,14 @@ if [ "$TRX" ] ; then
       exit 1
     fi
     if [ ${#RAW_TRX} -eq 0 ] ; then
-      echo "*** The raw trx has a length of 0. Something failed."
+      echo "*** error - fetching RAW_TRX data:"
+      echo "    The raw trx has a length of 0. Something failed."
+      echo "    downoad manually, and call 'trx2txt -r ...'"
+      exit 0
+    fi
+    if [ "$RAW_TRX" == "Transaction not found" ] ; then
+      echo "*** error - fetching RAW_TRX data:"
+      echo "    Transaction not found"
       echo "    downoad manually, and call 'trx2txt -r ...'"
       exit 0
     fi
