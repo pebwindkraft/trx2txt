@@ -12,23 +12,10 @@ I10: 18jul16 svn:
 ==================
 testcases_trx2txt.sh: testcase 20 fails on OpenBSD, cause parameter buffer is only 2048 Bytes
 
-I13: 27jul16, svn:
-==================
-trx_in_sig_script.sh and it's graph:
---> Status 32-34 not required, cause unsigned raw trx are handled in trx2txt.sh, and there
-    we call trx_out_script - so no code required here ...
-
 I14: 30jul16, svn:
 ==================
 try cold storage with this: 1JmPRD_unspent.txt
 make sure, fees don't get weird, and all three trx are used ...
-
-I15: 31jul16, svn:
-==================
-testcases_trx2txt.sh: testcase 8 for trx2txt.sh does not show the multisig "in" addresses
-testcases_trx2txt.sh: testcase 9 for trx2txt.sh does not show the multisig "in" addresses
---> blockchain.info shows the multisig addresses. How do they know???
-
 
 I16: 31jul16, svn:
 ==================
@@ -44,11 +31,11 @@ cut: [-bcf] list: 2082 too large (max 2048)
 #####################################
 ### Extensions / new Requirements ###
 #####################################
-E1:
+E1: Testnet
 ===============
 can it be extended for usage in testnet?
 
-E2:
+E2: MultiSig
 ===============
 For important values: make use of a 2of3 multisig with one in cold storage
 generate 3 addresses (and 3 private keys) A, B & C... and 
@@ -58,6 +45,13 @@ the multisig address starts with a "3", all the others (A,B & C) should be "1".
 send funds into the multisig address D (starts with a "3")... 
 make sure all the private keys for your A, B & C addresses are all backed up/stored independently of each other. 
 to take funds out of D, create a transaction using one of A,B or C.. and then co-sign the transaction using one of the other addresses.
+
+E3: Sending
+===============
+can a signed trx be sent to the net without tools?
+--> https://bitcointalk.org/index.php?topic=1043518.0
+curl -X POST -d tx=010000000158891e8f28100642464417f53845c3953a43e31b35d061bdbf6ca3a64fffabb8000000008c493046022100a9d501a6f59c45a24e65e5030903cfd80ba33910f24d6a505961d64fa5042b4f02210089fa7cc00ab2b5fc15499fa259a057e6d0911d4e849f1720cc6bc58e941fe7e20141041a2756dd506e45a1142c7f7f03ae9d3d9954f8543f4c3ca56f025df66f1afcba6086cec8d4135cbb5f5f1d731f25ba0884fc06945c9bbf69b9b543ca91866e79ffffffff01204e0000000000001976a914d04b020dab70a7dd7055db3bbc70d27c1b25a99c88ac00000000 https://blockchain.info/pushtx
+
 
 
 
