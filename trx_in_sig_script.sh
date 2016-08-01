@@ -48,6 +48,10 @@
 typeset -i msig_offset=1
 typeset -i cur_opcode_dec
 offset=1
+msig_redeem_str=''
+output=''
+opcode=''
+ret_string=''
 
 QUIET=0
 VERBOSE=0
@@ -68,15 +72,13 @@ v_output() {
 ###################
 # supporting web sites:
 # https://en.bitcoin.it/wiki/
-#         Technical_background_of_version_1_Bitcoin_addresses#How_to_create_Bitcoin_Address
+# Technical_background_of_version_1_Bitcoin_addresses#How_to_create_Bitcoin_Address
 # http://gobittest.appspot.com/Address
-get_address() {
+rmd160_sha256() {
   result=$( echo $ret_string | sed 's/[[:xdigit:]]\{2\}/\\x&/g' )
   result=$( printf "$result" | openssl dgst -sha256 | cut -d " " -f 2 )
   result=$( echo $result | sed 's/[[:xdigit:]]\{2\}/\\x&/g' )
   result=$( printf "$result" | openssl dgst -rmd160 | cut -d " " -f 2 )
-  ./trx_base58check_enc.sh -q $result
-  ret_string=''
 }
 ############################################################
 ### procedure to show data separated by colon or newline ###
@@ -127,8 +129,12 @@ S1_SIG_LEN_0x47() {
         S5_Sigtype
         ;;
     52) echo "   $cur_opcode: OP_2"
-        # in case we go for msig, then length of msig is 0x47 Bytes (2x71chars=142)
+        # in case we go for msig, then length of msig 
+        # is length of previous char - which was 0x47 Bytes (hex47=71dec, --> 142 chars)
         msig_len=142
+        echo "       ###### we go multisig, ( 2 out of n multisig ?) #######"
+        ret_string=''
+        msig_redeem_str=$cur_opcode
         S30_MSIG2of2
         ;;
     *)  echo "   $cur_opcode: unknown opcode "
@@ -401,7 +407,9 @@ S19_PK() {
     op_data_show
     echo "* This terminates the Public Key (X9.63 COMPRESSED form)"
     echo "* corresponding bitcoin address is:"
-    get_address
+    rmd160_sha256
+    ./trx_base58check_enc.sh -q $result
+    ret_string=''
 }
 #####################################
 ### STATUS 20 ()                  ###
@@ -412,7 +420,9 @@ S20_PK() {
     op_data_show
     echo "* This terminates the Public Key (X9.63 UNCOMPRESSED form)"
     echo "* corresponding bitcoin address is:"
-    get_address
+    rmd160_sha256
+    ./trx_base58check_enc.sh -q $result
+    ret_string=''
 }
 #####################################
 ### STATUS 21 (S21_SIG_LEN_0x49)  ###
@@ -525,50 +535,73 @@ S28_SIG_X() {
 ### STATUS 30 (S30_MSIG2of2)      ###
 #####################################
 S30_MSIG2of2() {
+  v_output "S30_MSIG2of2()"
   S30_to=$(( $offset + msig_len ))
   if [ $S30_to -gt $opcodes_len ] ; then
     S30_to=$opcodes_len 
   fi
-  v_output "S30_MSIG2of2, offset=$offset, S30_to=$S30_to, opcodes_len=$opcodes_len"
+  v_output "S30_MSIG2of2(), offset=$offset, S30_to=$S30_to, opcodes_len=$opcodes_len"
   while [ $offset -le $S30_to ]  
    do
     get_next_opcode
+    msig_redeem_str=$msig_redeem_str$cur_opcode
     case $cur_opcode in
       21) echo "   $cur_opcode: OP_DATA_0x21: compressed pub key"
+          # msig_redeem_str=$msig_redeem_str$cur_opcode
           op_data_show
-          echo "* This terminates the MultiSig's Public Key (X9.63 COMPRESSED form)"
-          echo "* corresponding bitcoin address is:"
-          get_address
+          echo "       * This is MultiSig's Public Key (X9.63 COMPRESSED form)"
+          echo "       * corresponding bitcoin address is:"
+          rmd160_sha256
+          ./trx_base58check_enc.sh -q $result
+          msig_redeem_str=$msig_redeem_str$ret_string
+          v_output "msig_redeem_str=$msig_redeem_str"
+          ret_string=''
           echo " "
           ;;
       41) echo "   $cur_opcode: OP_DATA_0x41: uncompressed pub key"
+          # msig_redeem_str=$msig_redeem_str$cur_opcode
           op_data_show
-          echo "* This terminates the MultiSig's Public Key (X9.63 UNCOMPRESSED form)"
-          echo "* corresponding bitcoin address is:"
-          get_address
+          echo "       * This is MultiSig's Public Key (X9.63 UNCOMPRESSED form)"
+          echo "       * corresponding bitcoin address is:"
+          rmd160_sha256
+          ./trx_base58check_enc.sh -q $result
+          msig_redeem_str=$msig_redeem_str$ret_string
+          v_output "msig_redeem_str=$msig_redeem_str"
+          ret_string=''
           echo " "
           ;;
       52) echo "   $cur_opcode: OP_2: push 2 Bytes onto stack"
           echo "       Multisig needs 2 pubkeys ?"
+          # msig_redeem_str=$msig_redeem_str$cur_opcode
           ;;
       AE) echo "   $cur_opcode: OP_CHECKMULTISIG"
           echo "       ########## Multisignature end ###########"
+          # msig_redeem_str=$msig_redeem_str$cur_opcode
+          v_output $msig_redeem_str
+          ret_string=$msig_redeem_str
+          echo "       * This terminates the MultiSig's redeem script"
+          echo "       * corresponding bitcoin address is:"
+          rmd160_sha256
+          ./trx_base58check_enc.sh -q $result -P2SH
+          ret_string=''
+          msig_redeem_str=''
           break
           ;;
       *)  echo "   $cur_opcode: unknown OpCode"
           ;;
     esac
   done
-  # v_output "********* end S30 while ****************"
 }
 ############################
 ### STATUS 35 (MSIG ...) ###
 ############################
 S35_MSIG2of3() {
+  echo "S35_MSIG2of3()"
   get_next_opcode
+  msig_redeem_str=$msig_redeem_str$cur_opcode
   case $cur_opcode in
     *)  echo "   $cur_opcode: OP_INTEGER $cur_opcode_dec Bytes (0x$cur_opcode) go to stack"
-        msig_len=$cur_opcode_dec
+        msig_len=$(( $cur_opcode_dec * 2 ))
         S36_LENGTH
         ;;
   esac
@@ -577,10 +610,13 @@ S35_MSIG2of3() {
 ### STATUS 36 (length) ###
 ##########################
 S36_LENGTH() {
+  v_output "S36_LENGTH()"
   get_next_opcode
   case $cur_opcode in
     52) echo "   $cur_opcode: OP_2: push 2 Bytes onto stack"
         echo "       ###### we go multisig, ( 2 out of n multisig ?) #######"
+        ret_string=''
+        msig_redeem_str=$cur_opcode
         S37_OP2
         ;;
     *)  echo "   $cur_opcode: unknown opcode "
@@ -591,41 +627,62 @@ S36_LENGTH() {
 ### STATUS 37 (length) ###
 ##########################
 S37_OP2() {
+  v_output "S37_OP2()"
   S37_to=$(( $offset + msig_len ))
   if [ $S37_to -gt $opcodes_len ] ; then
     S37_to=$opcodes_len 
   fi
-  v_output "S37_MSIG2of2, offset=$offset, S37_to=$S37_to, opcodes_len=$opcodes_len"
+  v_output "S37_OP2, offset=$offset, S37_to=$S37_to, opcodes_len=$opcodes_len"
   while [ $offset -le $S37_to ]  
    do
     get_next_opcode
+    msig_redeem_str=$msig_redeem_str$cur_opcode
     case $cur_opcode in
       21) echo "   $cur_opcode: OP_DATA_0x21: compressed pub key"
+          # msig_redeem_str=$msig_redeem_str$cur_opcode
           op_data_show
-          echo "* This terminates the MultiSig's Public Key (X9.63 COMPRESSED form)"
-          echo "* corresponding bitcoin address is:"
-          get_address
+          echo "       * This is MultiSig's Public Key (X9.63 COMPRESSED form)"
+          echo "       * corresponding bitcoin address is:"
+          rmd160_sha256
+          ./trx_base58check_enc.sh -q $result
+          msig_redeem_str=$msig_redeem_str$ret_string
+          v_output "msig_redeem_str=$msig_redeem_str"
+          ret_string=''
           echo " "
+  v_output "S37_OP2, offset=$offset, S37_to=$S37_to, opcodes_len=$opcodes_len"
           ;;
       41) echo "   $cur_opcode: OP_DATA_0x41: uncompressed pub key"
+          # msig_redeem_str=$msig_redeem_str$cur_opcode
           op_data_show
-          echo "* This terminates the MultiSig's Public Key (X9.63 UNCOMPRESSED form)"
-          echo "* corresponding bitcoin address is:"
-          get_address
+          echo "       * This is MultiSig's Public Key (X9.63 UNCOMPRESSED form)"
+          echo "       * corresponding bitcoin address is:"
+          rmd160_sha256
+          ./trx_base58check_enc.sh -q $result
+          msig_redeem_str=$msig_redeem_str$ret_string
+          v_output "msig_redeem_str=$msig_redeem_str"
+          ret_string=''
           echo " "
           ;;
       53) echo "   $cur_opcode: OP_3: push 3 Bytes onto stack"
-          echo "   Multisig needs 3 pubkeys ?"
+          echo "       Multisig needs 3 pubkeys"
           ;;
       AE) echo "   $cur_opcode: OP_CHECKMULTISIG"
           echo "       ########## Multisignature end ###########"
+          v_output $msig_redeem_str
+          ret_string=$msig_redeem_str
+          echo "       * This terminates the MultiSig's redeem script"
+          echo "       * corresponding bitcoin address is:"
+          rmd160_sha256
+          ./trx_base58check_enc.sh -q $result -P2SH
+          ret_string=''
+          msig_redeem_str=''
           break
           ;;
       *)  echo "   $cur_opcode: unknown OpCode"
           ;;
     esac
   done
-  # v_output "********* end S37 while ****************"
+  v_output "S37_OP2, offset=$offset, S37_to=$S37_to, opcodes_len=$opcodes_len"
 }
 
 ##########################################################################
@@ -713,9 +770,18 @@ fi
           ;;
     esac
 
-    # sometimes the script hangs, need to have emergency break.
-    # careful: multisig scripts can get longer!!!
-    if [ $offset -gt 510 ] ; then
+    # EMERGENCY EXIT :-)
+    # https://bitcointalk.org/index.php?topic=585639.0
+    # A tx is invalid if any of the following are true
+    # Block Size is >1,000 KB (this is a block level check but obviously a tx 
+    # which can't fit into a block <=1MB could never be confirmed at least not 
+    # until the 1MB limit is raised).
+    # A script is >10KB (this is per script so tx can be larger if it contains 
+    # multiple scripts each less than 10KB).
+    # The size of the value being pushed in a script is >520 bytes (effectively 
+    # limits P2SH scripts to 520 bytes as the redeemScript is pushed to the stack).
+    #
+    if [ $offset -gt 520 ] ; then
       echo "emergency exit, output scripts should not reach this size?"
       echo "          offset=$offset, scriptlen=$opcodes_len"
       exit 1

@@ -60,7 +60,10 @@ yymmmdd
                                      get rid of "if bash == BASH4", no array handling
 16jul31 svn   trx2txt.sh             added error check when fetching from blockchain.info
 16jul31 svn   trx_in_sig_script.sh   fixed minor issue, were wrong address was displayed
-16jul31 svn   trx_in_sig_state_machine.graphml - cleaned up for MultiSig (S30 ff)
+16jul31 svn   trx_in_sig_state_machine.graphml - removed unnecessary status, and added 
+                                                 redeem script colors for Multisig at the top
+16aug01 svn   trx_in_sig_script.sh   fixed multisig redeem script in "TX IN", to display
+                                     correct type "3" addresses 
 
 
 
