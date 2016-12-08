@@ -1,3 +1,11 @@
+********************************************
+08-dec-2016
+********************************************
+this software is discontinued, please see:
+https://github.com/pebwindkraft/trx_cl_suite
+********************************************
+
+
 GITHUB messes with the text and newlines, please view in "raw" mode...
 
 ##########################################
