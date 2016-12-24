@@ -1,0 +1,506 @@
+INSTALLING BITCOIN 13.1 on OpenBSD 5.9
+
+based on the document build-openbsd.md I followed the step by step description, but fell on an error at the end of bitcoin compilation: 
+
+  gmake[2]: /obj: Command not found
+  Makefile:9028: recipe for target 'obj/build.h' failed
+  gmake[2]: *** [obj/build.h] Error 127
+  gmake[2]: Leaving directory '/home/volker/Bitcoin/bitcoin13.1-src/src'
+  Makefile:8626: recipe for target 'all-recursive' failed
+  gmake[1]: *** [all-recursive] Error 1
+  gmake[1]: Leaving directory '/home/volker/Bitcoin/bitcoin13.1-src/src'
+  Makefile:558: recipe for target 'all-recursive' failed
+  gmake: *** [all-recursive] Error 1
+
+Just wanted to let you know. I can see ihe complains "/obj" directory, but 
+does not exist. There is a "./src/obj" directory, but again, this is empty...
+
+I am not sure how to help further, but will be happy to try things out (and learn boost and more...)
+. I think I installed this same master.zip some weeks ago on a Linux box, and it went through the complete cycle without problems ...
+
+thx, rgds,
+
+Volker
+
+
+==========================================================================
+I summarize "my" steps here:
+
+installed OpenBSD 5.9 some time ago, no major changes or updates done on the laptop. 
+Then installed all the packages mentioned, and downloaded bitcoin-master from github.
+
+  $ doas pkg_add gmake libtool libevent
+  $ pkg_info gmake
+  $ doas pkg_add gmake-4.1p0.tgz
+...
+  $ unzip -t ../Downloads/bitcoin-master.zip 
+  $ unzip ../Downloads/bitcoin-master.zip 
+  $ mv bitcoin-master bitcoin13.1-src
+  $ cd bitcoin13.1-src/
+
+The working directory is "bitcoin13.1-src", where the master is unzipped.
+Now comes boost:
+
+  $ BITCOIN_ROOT=$(pwd)
+  $ BOOST_PREFIX="${BITCOIN_ROOT}/boost"
+  $ mkdir -p $BOOST_PREFIX
+  $ curl -o boost_1_61_0.tar.bz2 http://heanet.dl.sourceforge.net/project/boost/boost/1.61.0/boost_1_61_0.tar.bz2
+  $ echo 'a547bd06c2fd9a71ba1d169d9cf0339da7ebf4753849a8f7d6fdb8feee99b640  boost_1_61_0.tar.bz2' | sha256 -c
+  $ tar -xjf boost_1_61_0.tar.bz2
+
+and get the patch:
+
+  $ cd boost_1_61_0/
+  $ curl -o /home/volker/Downloads/patch-boost_test_impl_execution_monitor_ipp.patch https://gist.githubusercontent.com/laanwj/bf359281dc319b8ff2e1/raw/92250de8404b97bb99d72ab898f4a8cb35ae1ea3/patch-boost_test_impl_execution_monitor_ipp.patch
+
+quickly check md5 before and after, so we know, if patch was applied (aka md5 must change):
+
+  $ md5 boost/test/impl/execution_monitor.ipp 
+  $ patch -p0 < /home/volker/Downloads/patch-boost_test_impl_execution_monitor_ipp.patch 
+  $ md5 boost/test/impl/execution_monitor.ipp 
+
+and continue the steps in the doc:
+
+  $ echo 'using gcc : : eg++ : <cxxflags>"-fvisibility=hidden -fPIC" <linkflags>"" <archiver>"ar" <striper>"strip"  <ranlib>"ranlib" <rc>"" : ;' > user-config.jam
+  $ config_opts="runtime-link=shared threadapi=pthread threading=multi link=static variant=release --layout=tagged --build-type=complete --user-config=user-config.jam -sNO_BZIP2=1"
+  $ ./bootstrap.sh --without-icu --with-libraries=chrono,filesystem,program_options,system,thread,test
+  $ sh -c "./b2 -d2 -j2 -d1 ${config_opts} --prefix=${BOOST_PREFIX} stage " > ~/161223_installlog.txt
+  $ ./b2 -d0 -j4 ${config_opts} --prefix=${BOOST_PREFIX} install
+
+output of boost installation and compile is this:
+
+------------------------------------------------------
+
+Performing configuration checks
+
+    - 32-bit                   : no  (cached)
+    - 64-bit                   : yes (cached)
+    - arm                      : no  (cached)
+    - mips1                    : no  (cached)
+    - power                    : no  (cached)
+    - sparc                    : no  (cached)
+    - x86                      : yes (cached)
+    - symlinks supported       : yes (cached)
+    - lockfree boost::atomic_flag : yes (cached)
+
+Component configuration:
+
+    - atomic                   : not building
+    - chrono                   : building
+    - container                : not building
+    - context                  : not building
+    - coroutine                : not building
+    - coroutine2               : not building
+    - date_time                : not building
+    - exception                : not building
+    - filesystem               : building
+    - graph                    : not building
+    - graph_parallel           : not building
+    - iostreams                : not building
+    - locale                   : not building
+    - log                      : not building
+    - math                     : not building
+    - metaparse                : not building
+    - mpi                      : not building
+    - program_options          : building
+    - python                   : not building
+    - random                   : not building
+    - regex                    : not building
+    - serialization            : not building
+    - signals                  : not building
+    - system                   : building
+    - test                     : building
+    - thread                   : building
+    - timer                    : not building
+    - type_erasure             : not building
+    - wave                     : not building
+
+...patience...
+...patience...
+...found 1737 targets...
+...updating 74 targets...
+gcc.compile.c++ bin.v2/libs/system/build/gcc-4.9.3/release/link-static/threading-multi/error_code.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64  -DBOOST_ALL_NO_LIB=1 -DBOOST_SYSTEM_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/system/build/gcc-4.9.3/release/link-static/threading-multi/error_code.o" "libs/system/src/error_code.cpp"
+
+RmTemps bin.v2/libs/system/build/gcc-4.9.3/release/link-static/threading-multi/libboost_system-mt.a(clean)
+
+    rm -f "bin.v2/libs/system/build/gcc-4.9.3/release/link-static/threading-multi/libboost_system-mt.a" 2>/dev/null >/dev/null
+
+gcc.archive bin.v2/libs/system/build/gcc-4.9.3/release/link-static/threading-multi/libboost_system-mt.a
+
+    "ar"  rc "bin.v2/libs/system/build/gcc-4.9.3/release/link-static/threading-multi/libboost_system-mt.a" "bin.v2/libs/system/build/gcc-4.9.3/release/link-static/threading-multi/error_code.o"
+    "ranlib" "bin.v2/libs/system/build/gcc-4.9.3/release/link-static/threading-multi/libboost_system-mt.a"
+
+common.copy stage/lib/libboost_system-mt.a
+
+    cp "bin.v2/libs/system/build/gcc-4.9.3/release/link-static/threading-multi/libboost_system-mt.a"  "stage/lib/libboost_system-mt.a"
+
+gcc.compile.c++ bin.v2/libs/chrono/build/gcc-4.9.3/release/link-static/threading-multi/chrono.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64 -Wextra -Wno-long-long -DBOOST_ALL_NO_LIB=1 -DBOOST_All_STATIC_LINK=1 -DBOOST_SYSTEM_NO_DEPRECATED -DBOOST_SYSTEM_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/chrono/build/gcc-4.9.3/release/link-static/threading-multi/chrono.o" "libs/chrono/src/chrono.cpp"
+
+gcc.compile.c++ bin.v2/libs/chrono/build/gcc-4.9.3/release/link-static/threading-multi/thread_clock.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64 -Wextra -Wno-long-long -DBOOST_ALL_NO_LIB=1 -DBOOST_All_STATIC_LINK=1 -DBOOST_SYSTEM_NO_DEPRECATED -DBOOST_SYSTEM_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/chrono/build/gcc-4.9.3/release/link-static/threading-multi/thread_clock.o" "libs/chrono/src/thread_clock.cpp"
+
+gcc.compile.c++ bin.v2/libs/chrono/build/gcc-4.9.3/release/link-static/threading-multi/process_cpu_clocks.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64 -Wextra -Wno-long-long -DBOOST_ALL_NO_LIB=1 -DBOOST_All_STATIC_LINK=1 -DBOOST_SYSTEM_NO_DEPRECATED -DBOOST_SYSTEM_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/chrono/build/gcc-4.9.3/release/link-static/threading-multi/process_cpu_clocks.o" "libs/chrono/src/process_cpu_clocks.cpp"
+
+RmTemps bin.v2/libs/chrono/build/gcc-4.9.3/release/link-static/threading-multi/libboost_chrono-mt.a(clean)
+
+    rm -f "bin.v2/libs/chrono/build/gcc-4.9.3/release/link-static/threading-multi/libboost_chrono-mt.a" 2>/dev/null >/dev/null
+
+gcc.archive bin.v2/libs/chrono/build/gcc-4.9.3/release/link-static/threading-multi/libboost_chrono-mt.a
+
+    "ar"  rc "bin.v2/libs/chrono/build/gcc-4.9.3/release/link-static/threading-multi/libboost_chrono-mt.a" "bin.v2/libs/chrono/build/gcc-4.9.3/release/link-static/threading-multi/chrono.o" "bin.v2/libs/chrono/build/gcc-4.9.3/release/link-static/threading-multi/thread_clock.o" "bin.v2/libs/chrono/build/gcc-4.9.3/release/link-static/threading-multi/process_cpu_clocks.o"
+    "ranlib" "bin.v2/libs/chrono/build/gcc-4.9.3/release/link-static/threading-multi/libboost_chrono-mt.a"
+
+common.copy stage/lib/libboost_chrono-mt.a
+
+    cp "bin.v2/libs/chrono/build/gcc-4.9.3/release/link-static/threading-multi/libboost_chrono-mt.a"  "stage/lib/libboost_chrono-mt.a"
+
+gcc.compile.c++ bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/codecvt_error_category.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pthread -m64  -DBOOST_ALL_NO_LIB=1 -DBOOST_FILESYSTEM_STATIC_LINK=1 -DBOOST_SYSTEM_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/codecvt_error_category.o" "libs/filesystem/src/codecvt_error_category.cpp"
+
+gcc.compile.c++ bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/path.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pthread -m64  -DBOOST_ALL_NO_LIB=1 -DBOOST_FILESYSTEM_STATIC_LINK=1 -DBOOST_SYSTEM_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/path.o" "libs/filesystem/src/path.cpp"
+
+gcc.compile.c++ bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/path_traits.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pthread -m64  -DBOOST_ALL_NO_LIB=1 -DBOOST_FILESYSTEM_STATIC_LINK=1 -DBOOST_SYSTEM_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/path_traits.o" "libs/filesystem/src/path_traits.cpp"
+
+gcc.compile.c++ bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/operations.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pthread -m64  -DBOOST_ALL_NO_LIB=1 -DBOOST_FILESYSTEM_STATIC_LINK=1 -DBOOST_SYSTEM_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/operations.o" "libs/filesystem/src/operations.cpp"
+
+gcc.compile.c++ bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/portability.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pthread -m64  -DBOOST_ALL_NO_LIB=1 -DBOOST_FILESYSTEM_STATIC_LINK=1 -DBOOST_SYSTEM_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/portability.o" "libs/filesystem/src/portability.cpp"
+
+gcc.compile.c++ bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/unique_path.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pthread -m64  -DBOOST_ALL_NO_LIB=1 -DBOOST_FILESYSTEM_STATIC_LINK=1 -DBOOST_SYSTEM_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/unique_path.o" "libs/filesystem/src/unique_path.cpp"
+
+gcc.compile.c++ bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/utf8_codecvt_facet.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pthread -m64  -DBOOST_ALL_NO_LIB=1 -DBOOST_FILESYSTEM_STATIC_LINK=1 -DBOOST_SYSTEM_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/utf8_codecvt_facet.o" "libs/filesystem/src/utf8_codecvt_facet.cpp"
+
+gcc.compile.c++ bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/windows_file_codecvt.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pthread -m64  -DBOOST_ALL_NO_LIB=1 -DBOOST_FILESYSTEM_STATIC_LINK=1 -DBOOST_SYSTEM_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/windows_file_codecvt.o" "libs/filesystem/src/windows_file_codecvt.cpp"
+
+RmTemps bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/libboost_filesystem-mt.a(clean)
+
+    rm -f "bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/libboost_filesystem-mt.a" 2>/dev/null >/dev/null
+
+gcc.archive bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/libboost_filesystem-mt.a
+
+    "ar"  rc "bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/libboost_filesystem-mt.a" "bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/codecvt_error_category.o" "bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/operations.o" "bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/path.o" "bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/path_traits.o" "bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/portability.o" "bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/unique_path.o" "bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/utf8_codecvt_facet.o" "bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/windows_file_codecvt.o"
+    "ranlib" "bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/libboost_filesystem-mt.a"
+
+common.copy stage/lib/libboost_filesystem-mt.a
+
+    cp "bin.v2/libs/filesystem/build/gcc-4.9.3/release/link-static/threading-multi/libboost_filesystem-mt.a"  "stage/lib/libboost_filesystem-mt.a"
+
+gcc.compile.c++ bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/config_file.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pthread -m64  -DBOOST_ALL_NO_LIB=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/config_file.o" "libs/program_options/src/config_file.cpp"
+
+gcc.compile.c++ bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/cmdline.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pthread -m64  -DBOOST_ALL_NO_LIB=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/cmdline.o" "libs/program_options/src/cmdline.cpp"
+
+gcc.compile.c++ bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/options_description.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pthread -m64  -DBOOST_ALL_NO_LIB=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/options_description.o" "libs/program_options/src/options_description.cpp"
+
+gcc.compile.c++ bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/parsers.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pthread -m64  -DBOOST_ALL_NO_LIB=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/parsers.o" "libs/program_options/src/parsers.cpp"
+
+gcc.compile.c++ bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/variables_map.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pthread -m64  -DBOOST_ALL_NO_LIB=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/variables_map.o" "libs/program_options/src/variables_map.cpp"
+
+gcc.compile.c++ bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/positional_options.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pthread -m64  -DBOOST_ALL_NO_LIB=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/positional_options.o" "libs/program_options/src/positional_options.cpp"
+
+gcc.compile.c++ bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/utf8_codecvt_facet.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pthread -m64  -DBOOST_ALL_NO_LIB=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/utf8_codecvt_facet.o" "libs/program_options/src/utf8_codecvt_facet.cpp"
+
+gcc.compile.c++ bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/convert.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pthread -m64  -DBOOST_ALL_NO_LIB=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/convert.o" "libs/program_options/src/convert.cpp"
+
+gcc.compile.c++ bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/winmain.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pthread -m64  -DBOOST_ALL_NO_LIB=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/winmain.o" "libs/program_options/src/winmain.cpp"
+
+gcc.compile.c++ bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/value_semantic.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pthread -m64  -DBOOST_ALL_NO_LIB=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/value_semantic.o" "libs/program_options/src/value_semantic.cpp"
+
+gcc.compile.c++ bin.v2/libs/timer/build/gcc-4.9.3/release/link-static/threading-multi/auto_timers_construction.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64  -DBOOST_ALL_NO_LIB=1 -DBOOST_CHRONO_STATIC_LINK=1 -DBOOST_SYSTEM_NO_DEPRECATED -DBOOST_SYSTEM_STATIC_LINK=1 -DBOOST_TIMER_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/timer/build/gcc-4.9.3/release/link-static/threading-multi/auto_timers_construction.o" "libs/timer/src/auto_timers_construction.cpp"
+
+In file included from libs/timer/src/auto_timers_construction.cpp:23:0:
+./boost/timer/timer.hpp:44:43: warning: use of C++11 long long integer constant [-Wlong-long]
+     void clear() { wall = user = system = 0LL; }
+                                           ^
+gcc.compile.c++ bin.v2/libs/timer/build/gcc-4.9.3/release/link-static/threading-multi/cpu_timer.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64  -DBOOST_ALL_NO_LIB=1 -DBOOST_CHRONO_STATIC_LINK=1 -DBOOST_SYSTEM_NO_DEPRECATED -DBOOST_SYSTEM_STATIC_LINK=1 -DBOOST_TIMER_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/timer/build/gcc-4.9.3/release/link-static/threading-multi/cpu_timer.o" "libs/timer/src/cpu_timer.cpp"
+
+In file included from libs/timer/src/cpu_timer.cpp:16:0:
+./boost/timer/timer.hpp:44:43: warning: use of C++11 long long integer constant [-Wlong-long]
+     void clear() { wall = user = system = 0LL; }
+                                           ^
+libs/timer/src/cpu_timer.cpp:108:23: warning: use of C++11 long long integer constant [-Wlong-long]
+         tick_factor = 1000000000LL / tick_factor;  // compute factor
+                       ^
+RmTemps bin.v2/libs/timer/build/gcc-4.9.3/release/link-static/threading-multi/libboost_timer-mt.a(clean)
+
+    rm -f "bin.v2/libs/timer/build/gcc-4.9.3/release/link-static/threading-multi/libboost_timer-mt.a" 2>/dev/null >/dev/null
+
+gcc.archive bin.v2/libs/timer/build/gcc-4.9.3/release/link-static/threading-multi/libboost_timer-mt.a
+
+    "ar"  rc "bin.v2/libs/timer/build/gcc-4.9.3/release/link-static/threading-multi/libboost_timer-mt.a" "bin.v2/libs/timer/build/gcc-4.9.3/release/link-static/threading-multi/auto_timers_construction.o" "bin.v2/libs/timer/build/gcc-4.9.3/release/link-static/threading-multi/cpu_timer.o"
+    "ranlib" "bin.v2/libs/timer/build/gcc-4.9.3/release/link-static/threading-multi/libboost_timer-mt.a"
+
+common.copy stage/lib/libboost_timer-mt.a
+
+    cp "bin.v2/libs/timer/build/gcc-4.9.3/release/link-static/threading-multi/libboost_timer-mt.a"  "stage/lib/libboost_timer-mt.a"
+
+gcc.compile.c++ bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/execution_monitor.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64 -Wno-variadic-macros -DBOOST_ALL_NO_LIB=1 -DBOOST_CHRONO_STATIC_LINK=1 -DBOOST_SYSTEM_NO_DEPRECATED -DBOOST_SYSTEM_STATIC_LINK=1 -DBOOST_TIMER_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/execution_monitor.o" "libs/test/src/execution_monitor.cpp"
+
+gcc.compile.c++ bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/split.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pthread -m64  -DBOOST_ALL_NO_LIB=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/split.o" "libs/program_options/src/split.cpp"
+
+RmTemps bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/libboost_program_options-mt.a(clean)
+
+    rm -f "bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/libboost_program_options-mt.a" 2>/dev/null >/dev/null
+
+gcc.archive bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/libboost_program_options-mt.a
+
+    "ar"  rc "bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/libboost_program_options-mt.a" "bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/cmdline.o" "bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/config_file.o" "bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/options_description.o" "bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/parsers.o" "bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/variables_map.o" "bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/value_semantic.o" "bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/positional_options.o" "bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/utf8_codecvt_facet.o" "bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/convert.o" "bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/winmain.o" "bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/split.o"
+    "ranlib" "bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/libboost_program_options-mt.a"
+
+common.copy stage/lib/libboost_program_options-mt.a
+
+    cp "bin.v2/libs/program_options/build/gcc-4.9.3/release/link-static/threading-multi/libboost_program_options-mt.a"  "stage/lib/libboost_program_options-mt.a"
+
+gcc.compile.c++ bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/debug.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64 -Wno-variadic-macros -DBOOST_ALL_NO_LIB=1 -DBOOST_CHRONO_STATIC_LINK=1 -DBOOST_SYSTEM_NO_DEPRECATED -DBOOST_SYSTEM_STATIC_LINK=1 -DBOOST_TIMER_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/debug.o" "libs/test/src/debug.cpp"
+
+gcc.compile.c++ bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/cpp_main.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64 -Wno-variadic-macros -DBOOST_ALL_NO_LIB=1 -DBOOST_CHRONO_STATIC_LINK=1 -DBOOST_SYSTEM_NO_DEPRECATED -DBOOST_SYSTEM_STATIC_LINK=1 -DBOOST_TIMER_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/cpp_main.o" "libs/test/src/cpp_main.cpp"
+
+RmTemps bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/libboost_prg_exec_monitor-mt.a(clean)
+
+    rm -f "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/libboost_prg_exec_monitor-mt.a" 2>/dev/null >/dev/null
+
+gcc.archive bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/libboost_prg_exec_monitor-mt.a
+
+    "ar"  rc "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/libboost_prg_exec_monitor-mt.a" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/execution_monitor.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/debug.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/cpp_main.o"
+    "ranlib" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/libboost_prg_exec_monitor-mt.a"
+
+common.copy stage/lib/libboost_prg_exec_monitor-mt.a
+
+    cp "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/libboost_prg_exec_monitor-mt.a"  "stage/lib/libboost_prg_exec_monitor-mt.a"
+
+gcc.compile.c++ bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/compiler_log_formatter.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64 -Wno-variadic-macros -DBOOST_ALL_NO_LIB=1 -DBOOST_CHRONO_STATIC_LINK=1 -DBOOST_SYSTEM_NO_DEPRECATED -DBOOST_SYSTEM_STATIC_LINK=1 -DBOOST_TIMER_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/compiler_log_formatter.o" "libs/test/src/compiler_log_formatter.cpp"
+
+gcc.compile.c++ bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/decorator.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64 -Wno-variadic-macros -DBOOST_ALL_NO_LIB=1 -DBOOST_CHRONO_STATIC_LINK=1 -DBOOST_SYSTEM_NO_DEPRECATED -DBOOST_SYSTEM_STATIC_LINK=1 -DBOOST_TIMER_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/decorator.o" "libs/test/src/decorator.cpp"
+
+gcc.compile.c++ bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/plain_report_formatter.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64 -Wno-variadic-macros -DBOOST_ALL_NO_LIB=1 -DBOOST_CHRONO_STATIC_LINK=1 -DBOOST_SYSTEM_NO_DEPRECATED -DBOOST_SYSTEM_STATIC_LINK=1 -DBOOST_TIMER_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/plain_report_formatter.o" "libs/test/src/plain_report_formatter.cpp"
+
+gcc.compile.c++ bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/progress_monitor.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64 -Wno-variadic-macros -DBOOST_ALL_NO_LIB=1 -DBOOST_CHRONO_STATIC_LINK=1 -DBOOST_SYSTEM_NO_DEPRECATED -DBOOST_SYSTEM_STATIC_LINK=1 -DBOOST_TIMER_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/progress_monitor.o" "libs/test/src/progress_monitor.cpp"
+
+gcc.compile.c++ bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/framework.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64 -Wno-variadic-macros -DBOOST_ALL_NO_LIB=1 -DBOOST_CHRONO_STATIC_LINK=1 -DBOOST_SYSTEM_NO_DEPRECATED -DBOOST_SYSTEM_STATIC_LINK=1 -DBOOST_TIMER_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/framework.o" "libs/test/src/framework.cpp"
+
+gcc.compile.c++ bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/results_collector.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64 -Wno-variadic-macros -DBOOST_ALL_NO_LIB=1 -DBOOST_CHRONO_STATIC_LINK=1 -DBOOST_SYSTEM_NO_DEPRECATED -DBOOST_SYSTEM_STATIC_LINK=1 -DBOOST_TIMER_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/results_collector.o" "libs/test/src/results_collector.cpp"
+
+gcc.compile.c++ bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/results_reporter.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64 -Wno-variadic-macros -DBOOST_ALL_NO_LIB=1 -DBOOST_CHRONO_STATIC_LINK=1 -DBOOST_SYSTEM_NO_DEPRECATED -DBOOST_SYSTEM_STATIC_LINK=1 -DBOOST_TIMER_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/results_reporter.o" "libs/test/src/results_reporter.cpp"
+
+gcc.compile.c++ bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/test_main.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64 -Wno-variadic-macros -DBOOST_ALL_NO_LIB=1 -DBOOST_CHRONO_STATIC_LINK=1 -DBOOST_SYSTEM_NO_DEPRECATED -DBOOST_SYSTEM_STATIC_LINK=1 -DBOOST_TIMER_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/test_main.o" "libs/test/src/test_main.cpp"
+
+gcc.compile.c++ bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/test_tree.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64 -Wno-variadic-macros -DBOOST_ALL_NO_LIB=1 -DBOOST_CHRONO_STATIC_LINK=1 -DBOOST_SYSTEM_NO_DEPRECATED -DBOOST_SYSTEM_STATIC_LINK=1 -DBOOST_TIMER_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/test_tree.o" "libs/test/src/test_tree.cpp"
+
+gcc.compile.c++ bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/test_tools.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64 -Wno-variadic-macros -DBOOST_ALL_NO_LIB=1 -DBOOST_CHRONO_STATIC_LINK=1 -DBOOST_SYSTEM_NO_DEPRECATED -DBOOST_SYSTEM_STATIC_LINK=1 -DBOOST_TIMER_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/test_tools.o" "libs/test/src/test_tools.cpp"
+
+gcc.compile.c++ bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/unit_test_log.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64 -Wno-variadic-macros -DBOOST_ALL_NO_LIB=1 -DBOOST_CHRONO_STATIC_LINK=1 -DBOOST_SYSTEM_NO_DEPRECATED -DBOOST_SYSTEM_STATIC_LINK=1 -DBOOST_TIMER_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/unit_test_log.o" "libs/test/src/unit_test_log.cpp"
+
+gcc.compile.c++ bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/unit_test_main.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64 -Wno-variadic-macros -DBOOST_ALL_NO_LIB=1 -DBOOST_CHRONO_STATIC_LINK=1 -DBOOST_SYSTEM_NO_DEPRECATED -DBOOST_SYSTEM_STATIC_LINK=1 -DBOOST_TIMER_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/unit_test_main.o" "libs/test/src/unit_test_main.cpp"
+
+gcc.compile.c++ bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/unit_test_monitor.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64 -Wno-variadic-macros -DBOOST_ALL_NO_LIB=1 -DBOOST_CHRONO_STATIC_LINK=1 -DBOOST_SYSTEM_NO_DEPRECATED -DBOOST_SYSTEM_STATIC_LINK=1 -DBOOST_TIMER_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/unit_test_monitor.o" "libs/test/src/unit_test_monitor.cpp"
+
+gcc.compile.c++ bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/xml_log_formatter.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64 -Wno-variadic-macros -DBOOST_ALL_NO_LIB=1 -DBOOST_CHRONO_STATIC_LINK=1 -DBOOST_SYSTEM_NO_DEPRECATED -DBOOST_SYSTEM_STATIC_LINK=1 -DBOOST_TIMER_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/xml_log_formatter.o" "libs/test/src/xml_log_formatter.cpp"
+
+gcc.compile.c++ bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/xml_report_formatter.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64 -Wno-variadic-macros -DBOOST_ALL_NO_LIB=1 -DBOOST_CHRONO_STATIC_LINK=1 -DBOOST_SYSTEM_NO_DEPRECATED -DBOOST_SYSTEM_STATIC_LINK=1 -DBOOST_TIMER_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/xml_report_formatter.o" "libs/test/src/xml_report_formatter.cpp"
+
+gcc.compile.c++ bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/unit_test_parameters.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64 -Wno-variadic-macros -DBOOST_ALL_NO_LIB=1 -DBOOST_CHRONO_STATIC_LINK=1 -DBOOST_SYSTEM_NO_DEPRECATED -DBOOST_SYSTEM_STATIC_LINK=1 -DBOOST_TIMER_STATIC_LINK=1 -DNDEBUG  -I"." -c -o "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/unit_test_parameters.o" "libs/test/src/unit_test_parameters.cpp"
+
+RmTemps bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/libboost_test_exec_monitor-mt.a(clean)
+
+    rm -f "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/libboost_test_exec_monitor-mt.a" 2>/dev/null >/dev/null
+
+gcc.archive bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/libboost_test_exec_monitor-mt.a
+
+    "ar"  rc "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/libboost_test_exec_monitor-mt.a" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/compiler_log_formatter.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/debug.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/decorator.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/execution_monitor.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/framework.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/plain_report_formatter.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/progress_monitor.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/results_collector.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/results_reporter.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/test_main.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/test_tools.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/test_tree.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/unit_test_log.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/unit_test_main.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/unit_test_monitor.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/unit_test_parameters.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/xml_log_formatter.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/xml_report_formatter.o"
+    "ranlib" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/libboost_test_exec_monitor-mt.a"
+
+common.copy stage/lib/libboost_test_exec_monitor-mt.a
+
+    cp "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/libboost_test_exec_monitor-mt.a"  "stage/lib/libboost_test_exec_monitor-mt.a"
+
+RmTemps bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/libboost_unit_test_framework-mt.a(clean)
+
+    rm -f "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/libboost_unit_test_framework-mt.a" 2>/dev/null >/dev/null
+
+gcc.archive bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/libboost_unit_test_framework-mt.a
+
+    "ar"  rc "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/libboost_unit_test_framework-mt.a" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/compiler_log_formatter.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/debug.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/decorator.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/execution_monitor.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/framework.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/plain_report_formatter.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/progress_monitor.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/results_collector.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/results_reporter.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/test_tools.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/test_tree.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/unit_test_log.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/unit_test_main.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/unit_test_monitor.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/unit_test_parameters.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/xml_log_formatter.o" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/xml_report_formatter.o"
+    "ranlib" "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/libboost_unit_test_framework-mt.a"
+
+common.copy stage/lib/libboost_unit_test_framework-mt.a
+
+    cp "bin.v2/libs/test/build/gcc-4.9.3/release/link-static/threading-multi/libboost_unit_test_framework-mt.a"  "stage/lib/libboost_unit_test_framework-mt.a"
+
+gcc.compile.c++ bin.v2/libs/thread/build/gcc-4.9.3/release/link-static/threading-multi/pthread/thread.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64 -Wextra -Wno-long-long -Wno-unused-parameter -Wunused-function -pedantic -DBOOST_ALL_NO_LIB=1 -DBOOST_SYSTEM_STATIC_LINK=1 -DBOOST_THREAD_BUILD_LIB=1 -DBOOST_THREAD_DONT_USE_CHRONO -DBOOST_THREAD_POSIX -DNDEBUG  -I"." -c -o "bin.v2/libs/thread/build/gcc-4.9.3/release/link-static/threading-multi/pthread/thread.o" "libs/thread/src/pthread/thread.cpp"
+
+In file included from ./boost/atomic/detail/atomic_template.hpp:25:0,
+                 from ./boost/atomic/atomic.hpp:22,
+                 from ./boost/atomic.hpp:12,
+                 from ./boost/thread/pthread/once_atomic.hpp:20,
+                 from ./boost/thread/once.hpp:20,
+                 from libs/thread/src/pthread/thread.cpp:17:
+./boost/atomic/detail/bitwise_cast.hpp: In instantiation of 'To boost::atomics::detail::bitwise_cast(const From&) [with To = long long unsigned int; From = void*]':
+./boost/atomic/detail/atomic_template.hpp:556:139:   required from here
+./boost/atomic/detail/bitwise_cast.hpp:39:14: warning: missing initializer for member 'boost::atomics::detail::bitwise_cast(const From&) [with To = long long unsigned int; From = void*]::<anonymous struct>::to' [-Wmissing-field-initializers]
+     value = {};
+              ^
+./boost/atomic/detail/bitwise_cast.hpp: In instantiation of 'To boost::atomics::detail::bitwise_cast(const From&) [with To = void*; From = long long unsigned int]':
+./boost/atomic/detail/atomic_template.hpp:574:100:   required from here
+./boost/atomic/detail/bitwise_cast.hpp:39:14: warning: missing initializer for member 'boost::atomics::detail::bitwise_cast(const From&) [with To = void*; From = long long unsigned int]::<anonymous struct>::to' [-Wmissing-field-initializers]
+gcc.compile.c++ bin.v2/libs/thread/build/gcc-4.9.3/release/link-static/threading-multi/pthread/once.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64 -Wextra -Wno-long-long -Wno-unused-parameter -Wunused-function -pedantic -DBOOST_ALL_NO_LIB=1 -DBOOST_SYSTEM_STATIC_LINK=1 -DBOOST_THREAD_BUILD_LIB=1 -DBOOST_THREAD_DONT_USE_CHRONO -DBOOST_THREAD_POSIX -DNDEBUG  -I"." -c -o "bin.v2/libs/thread/build/gcc-4.9.3/release/link-static/threading-multi/pthread/once.o" "libs/thread/src/pthread/once.cpp"
+
+In file included from ./boost/atomic/detail/atomic_template.hpp:25:0,
+                 from ./boost/atomic/atomic.hpp:22,
+                 from ./boost/atomic.hpp:12,
+                 from ./boost/thread/pthread/once_atomic.hpp:20,
+                 from ./boost/thread/once.hpp:20,
+                 from libs/thread/src/pthread/./once_atomic.cpp:9,
+                 from libs/thread/src/pthread/once.cpp:8:
+./boost/atomic/detail/bitwise_cast.hpp: In instantiation of 'To boost::atomics::detail::bitwise_cast(const From&) [with To = long long unsigned int; From = void*]':
+./boost/atomic/detail/atomic_template.hpp:556:139:   required from here
+./boost/atomic/detail/bitwise_cast.hpp:39:14: warning: missing initializer for member 'boost::atomics::detail::bitwise_cast(const From&) [with To = long long unsigned int; From = void*]::<anonymous struct>::to' [-Wmissing-field-initializers]
+     value = {};
+              ^
+./boost/atomic/detail/bitwise_cast.hpp: In instantiation of 'To boost::atomics::detail::bitwise_cast(const From&) [with To = void*; From = long long unsigned int]':
+./boost/atomic/detail/atomic_template.hpp:574:100:   required from here
+./boost/atomic/detail/bitwise_cast.hpp:39:14: warning: missing initializer for member 'boost::atomics::detail::bitwise_cast(const From&) [with To = void*; From = long long unsigned int]::<anonymous struct>::to' [-Wmissing-field-initializers]
+gcc.compile.c++ bin.v2/libs/thread/build/gcc-4.9.3/release/link-static/threading-multi/future.o
+
+    "eg++"  -ftemplate-depth-128 -fvisibility=hidden -fPIC -O3 -finline-functions -Wno-inline -Wall -pedantic -pthread -m64 -Wextra -Wno-long-long -Wno-unused-parameter -Wunused-function -pedantic -DBOOST_ALL_NO_LIB=1 -DBOOST_SYSTEM_STATIC_LINK=1 -DBOOST_THREAD_BUILD_LIB=1 -DBOOST_THREAD_DONT_USE_CHRONO -DBOOST_THREAD_POSIX -DNDEBUG  -I"." -c -o "bin.v2/libs/thread/build/gcc-4.9.3/release/link-static/threading-multi/future.o" "libs/thread/src/future.cpp"
+
+RmTemps bin.v2/libs/thread/build/gcc-4.9.3/release/link-static/threading-multi/libboost_thread-mt.a(clean)
+
+    rm -f "bin.v2/libs/thread/build/gcc-4.9.3/release/link-static/threading-multi/libboost_thread-mt.a" 2>/dev/null >/dev/null
+
+gcc.archive bin.v2/libs/thread/build/gcc-4.9.3/release/link-static/threading-multi/libboost_thread-mt.a
+
+    "ar"  rc "bin.v2/libs/thread/build/gcc-4.9.3/release/link-static/threading-multi/libboost_thread-mt.a" "bin.v2/libs/thread/build/gcc-4.9.3/release/link-static/threading-multi/pthread/thread.o" "bin.v2/libs/thread/build/gcc-4.9.3/release/link-static/threading-multi/pthread/once.o" "bin.v2/libs/thread/build/gcc-4.9.3/release/link-static/threading-multi/future.o"
+    "ranlib" "bin.v2/libs/thread/build/gcc-4.9.3/release/link-static/threading-multi/libboost_thread-mt.a"
+
+common.copy stage/lib/libboost_thread-mt.a
+
+    cp "bin.v2/libs/thread/build/gcc-4.9.3/release/link-static/threading-multi/libboost_thread-mt.a"  "stage/lib/libboost_thread-mt.a"
+
+...updated 74 targets...
+
+
+------------------------------------------------------
+
+Next comes database, I wanted to go with wallet:
+
+  $ BITCOIN_ROOT=$(pwd)
+  $ BDB_PREFIX="${BITCOIN_ROOT}/db4"
+  $ mkdir -p $BDB_PREFIX
+  $ curl -o db-4.8.30.NC.tar.gz 'http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz'
+  $ echo '12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef  db-4.8.30.NC.tar.gz' | sha256 -c
+  $ tar -xzf db-4.8.30.NC.tar.gz
+  $ cd db-4.8.30.NC/build_unix/
+  $ ../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX CC=egcc CXX=eg++ CPP=ecpp
+
+  $ ulimit -d 3000000
+  $ export AUTOMAKE_VERSION=1.9
+  $ export AUTOCONF_VERSION=2.69
+  $ ./autogen.sh
+  $ ./configure --disable-wallet --with-gui=no --with-boost=$BOOST_PREFIX CC=egcc CXX=eg++ CPP=ecpp
+  $ gmake
+
+this runs into an error, so I try without wallet:
+
+  $ ./configure --with-gui=no --with-boost=$BOOST_PREFIX \
+  $ CC=egcc CXX=eg++ CPP=ecpp \
+  $ LDFLAGS="-L${BDB_PREFIX}/lib/" CPPFLAGS="-I${BDB_PREFIX}/include/"
+  $ gmake
+  ...
+  gmake[2]: /obj: Command not found
+  Makefile:9028: recipe for target 'obj/build.h' failed
+  gmake[2]: *** [obj/build.h] Error 127
+  gmake[2]: Leaving directory '/home/volker/Bitcoin/bitcoin13.1-src/src'
+  Makefile:8626: recipe for target 'all-recursive' failed
+  gmake[1]: *** [all-recursive] Error 1
+  gmake[1]: Leaving directory '/home/volker/Bitcoin/bitcoin13.1-src/src'
+  Makefile:558: recipe for target 'all-recursive' failed
+  gmake: *** [all-recursive] Error 1
+
