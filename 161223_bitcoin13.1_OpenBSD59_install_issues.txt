@@ -496,3 +496,28 @@ this runs into an error, so I try without wallet:
   Makefile:558: recipe for target 'all-recursive' failed
   gmake: *** [all-recursive] Error 1
 
+I can see the last files which wer produced in the src directory:
+-rw-r--r--   1 volker  volker     513880 Dec 25 02:45 libbitcoin_server_a-versionbits.o
+-rw-r--r--   1 volker  volker  177152326 Dec 25 02:45 libbitcoin_server.a
+-rw-r--r--   1 volker  volker     435400 Dec 25 02:45 libbitcoin_common_a-amount.o
+-rw-r--r--   1 volker  volker     990184 Dec 25 02:45 libbitcoin_common_a-base58.o
+-rw-r--r--   1 volker  volker    2970960 Dec 25 02:45 libbitcoin_common_a-chainparams.o
+-rw-r--r--   1 volker  volker    1134344 Dec 25 02:45 libbitcoin_common_a-coins.o
+-rw-r--r--   1 volker  volker     239696 Dec 25 02:45 libbitcoin_common_a-compressor.o
+-rw-r--r--   1 volker  volker    2405840 Dec 25 02:45 libbitcoin_common_a-core_read.o
+-rw-r--r--   1 volker  volker    3453656 Dec 25 02:46 libbitcoin_common_a-core_write.o
+-rw-r--r--   1 volker  volker     453160 Dec 25 02:46 libbitcoin_common_a-key.o
+-rw-r--r--   1 volker  volker    2217336 Dec 25 02:46 libbitcoin_common_a-keystore.o
+-rw-r--r--   1 volker  volker    1156760 Dec 25 02:46 libbitcoin_common_a-netaddress.o
+-rw-r--r--   1 volker  volker    2482800 Dec 25 02:46 libbitcoin_common_a-netbase.o
+-rw-r--r--   1 volker  volker     869192 Dec 25 02:46 libbitcoin_common_a-protocol.o
+-rw-r--r--   1 volker  volker    1685504 Dec 25 02:46 libbitcoin_common_a-scheduler.o
+drwxr-xr-x   4 volker  volker       1024 Dec 25 02:47 script/
+-rw-r--r--   1 volker  volker    1971680 Dec 25 02:47 libbitcoin_common_a-warnings.o
+-rw-r--r--   1 volker  volker   26500128 Dec 25 02:47 libbitcoin_common.a
+drwxr-xr-x  10 volker  volker       1024 Dec 25 02:47 univalue/
+drwxr-xr-x   4 volker  volker        512 Dec 25 02:47 support/
+-rw-r--r--   1 volker  volker    1869056 Dec 25 02:47 libbitcoin_util_a-chainparamsbase.o
+
+the compile log is in file 
+https://github.com/pebwindkraft/trx2txt/blob/master/161225_compile.log
