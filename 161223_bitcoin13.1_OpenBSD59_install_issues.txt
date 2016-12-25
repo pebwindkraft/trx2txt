@@ -12,16 +12,8 @@ based on the document build-openbsd.md I followed the step by step description, 
   Makefile:558: recipe for target 'all-recursive' failed
   gmake: *** [all-recursive] Error 1
 
-Just wanted to let you know. I can see ihe complains "/obj" directory, but 
+I can see ihe complains "/obj" directory, but 
 does not exist. There is a "./src/obj" directory, but again, this is empty...
-
-I am not sure how to help further, but will be happy to try things out (and learn boost and more...)
-. I think I installed this same master.zip some weeks ago on a Linux box, and it went through the complete cycle without problems ...
-
-thx, rgds,
-
-Volker
-
 
 ==========================================================================
 I summarize "my" steps here:
