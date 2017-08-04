@@ -18,7 +18,7 @@ Install Erlang, get the source:
 ```
 wget http://erlang.org/download/otp_src_20.0.tar.gz
 ```
-verify the tar file:
+verify the tarball:
 ```
 tar tvzf otp_src_20.0.tar.gz
 ```
@@ -28,7 +28,7 @@ tar xzf otp_src_20.0.tar.gz
 ```
 prepare environment (follow steps of erlang install readme):
 ```
-cd otp_src_20.0/
+cd otp_src_20.0
 export ERL_TOP=`pwd`
 export LANG=C
 ./configure --enable-hipe
@@ -54,7 +54,8 @@ sudo make install
 start erlang from your command line and see, if [hipe] is displayed.
 
 
-*** Aeternity ***
+Aeternity
+=========
 change to your home directory, get the source code, and compile it:
 ```
 git clone https://github.com/aeternity/testnet.git
