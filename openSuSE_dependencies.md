@@ -1,5 +1,8 @@
-install Aeternity and Erlang on OpenSuSE Leap 42.3
+Installation of Aeternity on OpenSuSE Leap 42.3
+... requires Erlang 
 
+OpenSuSE Leap 42.3
+==================
 When doing a fresh OS install, choose "minimal server install".
 Once on the running system, check that these packages get/are installed:
 ```
@@ -14,7 +17,9 @@ Once on the running system, check that these packages get/are installed:
 + libopenssl-devel
 ```
 
-Install Erlang, get the source:
+Erlang
+======
+get the source:
 ```
 wget http://erlang.org/download/otp_src_20.0.tar.gz
 ```
